@@ -84,5 +84,9 @@ def update_observation_stations(stations: list):
         pipeline.hset(f"weather_station:weather.gov:{station_id}", mapping=station)
         pipeline.sadd("weather_station:weather.gov:station_ids", station_id)
 
+    # TODO
+    #  Update the station tracker: how many stations there were on a specific date.
+    #  This is going to be a timeseries. On July 10, 2024 there were 46483 stations
+
     pipeline.execute()
     logger.info(f"Stations info was updated in Redis")
