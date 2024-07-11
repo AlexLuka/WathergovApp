@@ -50,4 +50,13 @@ def historical_data_loader():
 
 
 def rt_data_loader():
+    """
+    This one is pretty much the same, except we are going to request data from
+    different endpoint, and the last request time is going to be different as well.
+    But the period is going to be the same. So, basically, we can use the same code
+    and pass only endpoint url, Redis key where to get the last update info from,
+    and coefficient +-1 that indicates if we want to get data point from past or from
+    the future
+    :return:
+    """
     pass
