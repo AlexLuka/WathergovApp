@@ -2,7 +2,7 @@ import os
 import requests
 import logging
 
-from time import sleep
+from time import time, sleep
 from weathergov.constants import APP_NAME
 
 
@@ -15,7 +15,8 @@ def get_all_stations() -> list:
         API and returns them as a list of dictionaries.
     :return:
     """
-
+    # Measure how long does it take to run this function
+    t_ = time()
     stations = []
 
     weather_gov_api_url = os.environ.get('WEATHER_GOV_API_URL')
@@ -102,5 +103,10 @@ def get_all_stations() -> list:
 
         url_station_link = rj['pagination']['next']
         sleep(2)
+
+        # TODO Temporary: remove this when finish
+        #   Going to stop after the first iteration to speed up the testing process
+        break
     logger.info(f"Got information about {len(stations)} stations from Weather.gov API")
+    logger.debug(f"get_all_stations() run within {time() - t_:.1f} seconds")
     return stations

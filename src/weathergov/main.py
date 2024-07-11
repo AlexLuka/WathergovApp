@@ -43,7 +43,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Init the logger
-    logger = init_logger(__name__)
+    logger = init_logger("weathergov")
 
     # Load the environment variables if running in local environment
     # In cloud deployment all the env variables are going to be setup
