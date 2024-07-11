@@ -30,6 +30,22 @@ def observation_station_loader():
 
 
 def historical_data_loader():
+    """
+        The goal of this loader is to load historical data. If we try to get
+        observations from a station we will get only 1 week of data. But there is
+        an option to specify date and time. So, the logic for this one is going to
+        be the following:
+        - Pick a station: not randomly but based on when it was updated last time. If it
+            was updated recently then it is going to have lower priority
+        - If station has no data, then try to get the last week of data
+        - If station has some data, then get the oldest data point timestamp and timestamp
+            when the last data was requested. These are not the same because we may request
+            data for a specific timestamp and get none. Therefore, we cannot rely on actual
+            data, but on the time for which we requested the data. For every new request the
+            time should be reduced by the time period.
+        - Send a request to get the data and update the request time in Redis.
+    :return:
+    """
     pass
 
 
