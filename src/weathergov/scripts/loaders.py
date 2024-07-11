@@ -1,3 +1,4 @@
+import random
 import logging
 
 from weathergov.utils.stations_utils import get_all_stations
@@ -19,8 +20,10 @@ def observation_station_loader():
     # Get all stations from the Weather.gov API
     # There should be about 45000 stations, not too many.
     stations = get_all_stations()
+    logger.info(f"Random example of station info: {random.choice(stations)}")
 
     # TODO Load all the stations to Redis
+    logger.warning(f"Loading to Redis have not been implemented yet")
 
     # TODO Update the timestamp when the station info was updated
 

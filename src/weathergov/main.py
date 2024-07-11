@@ -1,5 +1,7 @@
 import argparse
 
+from dotenv import load_dotenv
+
 from weathergov.scripts.loaders import (observation_station_loader,
                                         historical_data_loader,
                                         rt_data_loader)
@@ -37,9 +39,17 @@ if __name__ == "__main__":
         epilog='How can I help you?')
 
     parser.add_argument("-s", "--script", default="NotSelected")
+    parser.add_argument("-e", "--environment", default="Local")
     args = parser.parse_args()
 
     # Init the logger
     logger = init_logger(__name__)
+
+    # Load the environment variables if running in local environment
+    # In cloud deployment all the env variables are going to be setup
+    # separately, and therefore no need to load them from .env file - there
+    # will be no such.
+    if args.environment == "Local":
+        load_dotenv()
 
     main(args.script)
