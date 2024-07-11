@@ -67,7 +67,7 @@ def get_all_stations() -> list:
                     station[my_key] = feature_properties[their_key]
                 except KeyError:
                     logger.warning(f"Key '{their_key}' not found in the feature properties")
-                    station[my_key] = None
+                    station[my_key] = ""
 
             # Get the elevation
             try:
@@ -81,7 +81,7 @@ def get_all_stations() -> list:
                     station[my_key] = elevation[their_key]
                 except KeyError:
                     logger.warning(f"Key '{their_key}' not found in the elevation property")
-                    station[my_key] = None
+                    station[my_key] = ""
 
             # Get the geometry, coordinates
             try:
@@ -96,8 +96,8 @@ def get_all_stations() -> list:
                 station['latitude'] = lat
             except KeyError:
                 logger.warning(f"Key 'coordinates' not found in the feature geometry")
-                station['longitude'] = None
-                station['latitude'] = None
+                station['longitude'] = ""
+                station['latitude'] = ""
 
             stations.append(station)
 
