@@ -56,7 +56,7 @@ class RedisInfo:
 def update_observation_stations(stations: list):
     """
         Save observation stations to Redis HASH
-        under "weather_station:weather.gov:SJAC2"
+        under "weather_station:weather.gov:ABCD23"
         where the latter is the station ID.
 
         In addition, create a set of all the station IDs:
