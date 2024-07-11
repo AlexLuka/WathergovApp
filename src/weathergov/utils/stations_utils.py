@@ -104,9 +104,6 @@ def get_all_stations() -> list:
         url_station_link = rj['pagination']['next']
         sleep(2)
 
-        # TODO Temporary: remove this when finish
-        #   Going to stop after the first iteration to speed up the testing process
-        break
     logger.info(f"Got information about {len(stations)} stations from Weather.gov API")
     logger.debug(f"get_all_stations() run within {time() - t_:.1f} seconds")
     return stations
