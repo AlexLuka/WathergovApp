@@ -3,6 +3,8 @@ import argparse
 from weathergov.scripts.loaders import (observation_station_loader,
                                         historical_data_loader,
                                         rt_data_loader)
+from weathergov.utils.logging_utils import init_logger
+
 
 """
     Depending on type of a selected script we are going to run the corresponding 
@@ -15,16 +17,16 @@ from weathergov.scripts.loaders import (observation_station_loader,
 
 def main(script_name: str):
     if script_name == "ObservationStationsLoader":
-        print(f"ObservationStationsLoader is running")
+        logger.info(f"ObservationStationsLoader is running")
         observation_station_loader()
     elif script_name == "HistoricalDataLoader":
-        print(f"HistoricalDataLoader is running")
+        logger.info(f"HistoricalDataLoader is running")
         historical_data_loader()
     elif script_name == "RTDataLoader":
-        print(f"RTDataLoader is running")
+        logger.info(f"RTDataLoader is running")
         rt_data_loader()
     else:
-        print(f"Unknown script {script_name}. Exiting...")
+        logger.info(f"Unknown script {script_name}. Exiting...")
         exit(1)
 
 
@@ -36,5 +38,8 @@ if __name__ == "__main__":
 
     parser.add_argument("-s", "--script", default="NotSelected")
     args = parser.parse_args()
+
+    # Init the logger
+    logger = init_logger(__name__)
 
     main(args.script)
