@@ -1,8 +1,9 @@
+import json
 import random
 import logging
 
 from weathergov.utils.redis_utils import update_observation_stations, RedisClient
-from weathergov.utils.stations_utils import get_all_stations
+from weathergov.utils.stations_utils import get_all_stations, get_station_data
 
 
 logger = logging.getLogger(__name__)
@@ -61,9 +62,30 @@ def historical_data_loader(env: str, worker_id: int):
     rc = RedisClient()
 
     if worker_id == 0:
+        # TODO Check when the last time the queue was filled! If more than 6 days ago, then
+        #   refill
         rc.create_weather_stations_queue()
 
     # Start consuming from weather stations queue and process each station individually
+    while True:
+        payload_str = rc.get_station_id_from_queue()
+
+        if payload_str is None:
+            # Reached the end of a queue
+            break
+
+        # If payload is not None, then try to unpack it
+        payload = json.loads(payload_str)
+
+        # We may use different processing functions based on
+        # the source, but right now we have only one source: weather.gov
+        station_id = payload['station_id']
+
+        # Get the data from
+        data = get_station_data(station_id=station_id)
+
+        # Save data to Redis timeseries
+        rc.add_timeseries_data(data)
 
 
 def rt_data_loader():

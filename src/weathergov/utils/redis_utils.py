@@ -83,6 +83,12 @@ class RedisClient:
 
         pipeline.execute()
 
+    def get_station_id_from_queue(self) -> str:
+        return self.rc.lpop("weather_station_process_queue")
+
+    def add_timeseries_data(self, data: dict):
+        pass
+
 
 # TODO Move this function to a RedisClient class
 def update_observation_stations(stations: list):

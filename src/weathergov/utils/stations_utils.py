@@ -107,3 +107,75 @@ def get_all_stations() -> list:
     logger.info(f"Got information about {len(stations)} stations from Weather.gov API")
     logger.debug(f"get_all_stations() run within {time() - t_:.1f} seconds")
     return stations
+
+
+def get_station_data(station_id: str) -> dict:
+    """
+
+    :param station_id:
+    :return:
+    """
+
+    t_ = time()
+    data = {
+        "ts": [],
+        "temperature": [],
+        "dew_point": [],
+        "wind_direction": [],
+        "wind_speed": [],
+        "wind_gust": [],
+        "barometric_pressure": [],
+        "sea_level_pressure": [],
+        "visibility": [],
+        "precipitation_last_3h": [],
+        "relative_humidity": [],
+        "wind_chill": [],
+        "heat_index": []
+    }
+
+    weather_gov_api_url = os.environ.get('WEATHER_GOV_API_URL')
+    url_station_link = f"{weather_gov_api_url}/stations/{station_id}/observations"
+
+    headers = {
+        "User-Agent": APP_NAME
+    }
+
+    response = requests.get(url_station_link, headers=headers)
+
+    if response.status_code != 200:
+        logger.warning(f"Got status code {response.status_code} for station {station_id}")
+        return data
+
+    # Get response in JSON format
+    rj = response.json()
+
+    if "features" not in rj.keys():
+        logger.warning(f"Failre to find 'features' key in a response for station {station_id}")
+
+    features: list
+    features = rj['features']
+
+    for feature in features:
+        properties = feature['properties']
+
+        # Add timestamp
+        data["ts"].append(properties['timestamp'])
+
+        for my_key, their_key in [("temperature", "temperature"),
+                                  ("dew_point", "dewpoint"),
+                                  ("wind_direction", "windDirection"),
+                                  ("wind_speed", "windSpeed"),
+                                  ("wind_gust", "windGust"),
+                                  ("barometric_pressure", "barometricPressure"),
+                                  ("sea_level_pressure", "seaLevelPressure"),
+                                  ("visibility", "visibility"),
+                                  ("precipitation_last_3h", "precipitationLast3Hours"),
+                                  ("relative_humidity", "relativeHumidity"),
+                                  ("wind_chill", "windChill"),
+                                  ("heat_index", "heatIndex")]:
+            try:
+                data[my_key].append(properties[their_key])
+            except KeyError:
+                data[my_key].append(None)
+    logger.debug(f"get_station_data() run within {time() - t_:.1f} seconds")
+    return data
