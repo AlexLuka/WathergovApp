@@ -92,7 +92,7 @@ def historical_data_loader(env: str, worker_id: int):
         data = get_station_data(station_id=station_id)
 
         # Save data to Redis timeseries
-        rc.add_timeseries_data(data)
+        rc.add_timeseries_data(station_id=station_id, data=data)
 
     # Update the time when calculations have finished
     if worker_id == 0:
