@@ -1,7 +1,7 @@
 import random
 import logging
 
-from weathergov.utils.redis_utils import update_observation_stations
+from weathergov.utils.redis_utils import update_observation_stations, RedisClient
 from weathergov.utils.stations_utils import get_all_stations
 
 
@@ -29,7 +29,7 @@ def observation_station_loader():
     # TODO Update the timestamp when the station info was updated
 
 
-def historical_data_loader():
+def historical_data_loader(env: str, worker_id: int):
     """
         The goal of this loader is to load historical data. If we try to get
         observations from a station we will get only 1 week of data. But there is
@@ -44,9 +44,26 @@ def historical_data_loader():
             data, but on the time for which we requested the data. For every new request the
             time should be reduced by the time period.
         - Send a request to get the data and update the request time in Redis.
+
+        We need multiple loaders running in parallel. If run them locally, on my PC, they can run
+        non-stop 100% of a time with just sleeping in between of calls. How do they communicate?
+        That can be simple:
+            1. Associate each instance with unique ID - integer starting from 0, like 0, 1, 2, 3
+            2. Instance 0 is the main one always, it is going to start earlier a bit and generate
+               a list of stations to be processed and send them to a queue
+            3. Instances 1+ are going to listen to a queue and work until queue get empty
+            4. Note that if we run this in AWS we are going to run this job weekly, and therefore must exit
+               when finished. While if we run it locally in my PC this must live in docker env and run forever.
+               The difference is going to be determined by env parameter
     :return:
     """
-    pass
+    # Create a connection to Redis
+    rc = RedisClient()
+
+    if worker_id == 0:
+        rc.create_weather_stations_queue()
+
+    # Start consuming from weather stations queue and process each station individually
 
 
 def rt_data_loader():

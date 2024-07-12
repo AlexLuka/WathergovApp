@@ -17,13 +17,13 @@ from weathergov.utils.logging_utils import init_logger
 """
 
 
-def main(script_name: str):
+def main(script_name: str, worker_id: int, env: str):
     if script_name == "ObservationStationsLoader":
         logger.info(f"ObservationStationsLoader is running")
         observation_station_loader()
     elif script_name == "HistoricalDataLoader":
         logger.info(f"HistoricalDataLoader is running")
-        historical_data_loader()
+        historical_data_loader(env=env, worker_id=worker_id)
     elif script_name == "RTDataLoader":
         logger.info(f"RTDataLoader is running")
         rt_data_loader()
@@ -39,7 +39,16 @@ if __name__ == "__main__":
         epilog='How can I help you?')
 
     parser.add_argument("-s", "--script", default="NotSelected")
+    #
+    # This can be either Local or AWS. If run in AWS, then we are going to do certain
+    # things differently.
     parser.add_argument("-e", "--environment", default="Local")
+    #
+    # Worker ID is going to be used by a data loader that runs once a week.
+    # We plan to run multiple workers to process data in parallel, and therefore
+    # need different worker IDs to differentiate the workers.
+    parser.add_argument("-w", "--worker-id", default=0, type=int)
+
     args = parser.parse_args()
 
     # Init the logger
@@ -52,4 +61,6 @@ if __name__ == "__main__":
     if args.environment == "Local":
         load_dotenv()
 
-    main(args.script)
+    main(script_name=args.script,
+         worker_id=args.worker_id,
+         env=args.environment)

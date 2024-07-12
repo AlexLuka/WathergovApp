@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from redis import Redis
 
@@ -53,6 +54,37 @@ class RedisInfo:
         return ri
 
 
+class RedisClient:
+    def __init__(self):
+        redis_info = RedisInfo.load()
+
+        self.rc = Redis(
+            host=redis_info.host,
+            port=redis_info.port,
+            password=redis_info.password,
+            decode_responses=True
+        )
+
+    def create_weather_stations_queue(self):
+        # Get all station IDs. There should be about 46000 of them
+        station_ids = list(self.rc.smembers("weather_station:weather.gov:station_ids"))
+
+        # Put all of them into a list
+        # If at some point we are going to deal with different data sources, then include data
+        # source to a payload: include station ID and
+        pipeline = self.rc.pipeline()
+
+        for station_id in station_ids:
+            payload = json.dumps({
+                "station_id": station_id,
+                "data_source": "weather.gov"
+            })
+            pipeline.lpush("weather_station_process_queue", payload)
+
+        pipeline.execute()
+
+
+# TODO Move this function to a RedisClient class
 def update_observation_stations(stations: list):
     """
         Save observation stations to Redis HASH
