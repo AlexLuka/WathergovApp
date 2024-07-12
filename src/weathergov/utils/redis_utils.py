@@ -86,6 +86,19 @@ class RedisClient:
     def get_station_id_from_queue(self) -> str:
         return self.rc.lpop("weather_station_process_queue")
 
+    def get_station_data_populated_last_time_ts(self):
+        ts_str = self.rc.get("weather_station:weather.gov:last_data_update_ts")
+
+        if ts_str is None:
+            # If we get None, then it have never been fetched before
+            return 0
+
+        # convert to integer
+        return int(ts_str)
+
+    def set_station_data_populated_last_time_ts(self, ts: int):
+        self.rc.set("weather_station:weather.gov:last_data_update_ts", str(ts))
+
     def add_timeseries_data(self, data: dict):
         pass
 

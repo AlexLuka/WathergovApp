@@ -2,6 +2,8 @@ import json
 import random
 import logging
 
+from time import time
+
 from weathergov.utils.redis_utils import update_observation_stations, RedisClient
 from weathergov.utils.stations_utils import get_all_stations, get_station_data
 
@@ -62,9 +64,14 @@ def historical_data_loader(env: str, worker_id: int):
     rc = RedisClient()
 
     if worker_id == 0:
-        # TODO Check when the last time the queue was filled! If more than 6 days ago, then
-        #   refill
-        rc.create_weather_stations_queue()
+        # Check when the last time the queue was filled! If more than 6 days ago, then refill
+        ts_last = rc.get_station_data_populated_last_time_ts()
+
+        if time() - ts_last > 3600 * 24 * 6:
+            # If time delta between last update time and the current update time is greater
+            # than 6 days (we assume that we get 7 days of data), and also that we are going
+            # to run this as a scheduled job
+            rc.create_weather_stations_queue()
 
     # Start consuming from weather stations queue and process each station individually
     while True:
@@ -86,6 +93,12 @@ def historical_data_loader(env: str, worker_id: int):
 
         # Save data to Redis timeseries
         rc.add_timeseries_data(data)
+
+    # Update the time when calculations have finished
+    if worker_id == 0:
+        # Technically, this is redundant check because we can update from
+        # all the workers without any issues. However, lets update only once.
+        rc.set_station_data_populated_last_time_ts(int(time()))
 
 
 def rt_data_loader():
