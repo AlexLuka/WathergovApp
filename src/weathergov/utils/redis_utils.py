@@ -65,7 +65,10 @@ class RedisClient:
             host=redis_info.host,
             port=redis_info.port,
             password=redis_info.password,
-            decode_responses=True
+            db=0,
+            decode_responses=True,
+            socket_keepalive=True,
+            socket_timeout=60
         )
 
     def create_weather_stations_queue(self):
