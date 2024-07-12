@@ -60,6 +60,8 @@ def historical_data_loader(env: str, worker_id: int):
                The difference is going to be determined by env parameter
     :return:
     """
+    t_ = time()
+
     # Create a connection to Redis
     rc = RedisClient()
 
@@ -100,6 +102,8 @@ def historical_data_loader(env: str, worker_id: int):
         # Technically, this is redundant check because we can update from
         # all the workers without any issues. However, lets update only once.
         rc.set_station_data_populated_last_time_ts(int(time()))
+
+    logger.info(f"Data population took {(time() - t_) / 3600:.1f} hours")
 
 
 def rt_data_loader():
