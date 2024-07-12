@@ -72,6 +72,13 @@ class RedisClient:
         # Get all station IDs. There should be about 46000 of them
         station_ids = list(self.rc.smembers("weather_station:weather.gov:station_ids"))
 
+        # Check if the queue is empty, if not, then no need to create anything again
+        n = self.rc.llen("weather_station_process_queue")
+
+        if n > 0:
+            self.logger.info(f"Queue is not empty. Need to complete the previous computations first!")
+            return
+
         # Put all of them into a list
         # If at some point we are going to deal with different data sources, then include data
         # source to a payload: include station ID and

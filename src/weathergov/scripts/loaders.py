@@ -72,6 +72,7 @@ def historical_data_loader(env: str, worker_id: int):
             # than 6 days (we assume that we get 7 days of data), and also that we are going
             # to run this as a scheduled job
             rc.create_weather_stations_queue()
+            logger.info(f"Last time data was updated more than 6 days ago. Update is required")
 
     # Start consuming from weather stations queue and process each station individually
     while True:

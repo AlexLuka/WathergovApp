@@ -3,7 +3,7 @@ import requests
 import logging
 
 from time import time, sleep
-from weathergov.constants import APP_NAME
+from weathergov.constants import APP_NAME, MISSING_VALUE
 
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ def get_station_data(station_id: str) -> dict:
 
     t_ = time()
     data = {
-        "ts": [],
+        "timestamp": [],
         "temperature": [],
         "dew_point": [],
         "wind_direction": [],
@@ -158,8 +158,7 @@ def get_station_data(station_id: str) -> dict:
     for feature in features:
         properties = feature['properties']
 
-        # Add timestamp
-        data["ts"].append(properties['timestamp'])
+        data["timestamp"].append(properties["timestamp"])
 
         for my_key, their_key in [("temperature", "temperature"),
                                   ("dew_point", "dewpoint"),
@@ -174,8 +173,15 @@ def get_station_data(station_id: str) -> dict:
                                   ("wind_chill", "windChill"),
                                   ("heat_index", "heatIndex")]:
             try:
-                data[my_key].append(properties[their_key])
+                value = properties[their_key]['value']
             except KeyError:
-                data[my_key].append(None)
+                value = MISSING_VALUE
+
+            if value is None:
+                # We must replace missing value with some numerical value
+                # which is not going to be confused with the real observations
+                value = MISSING_VALUE
+
+            data[my_key].append(value)
     logger.debug(f"get_station_data() run within {time() - t_:.1f} seconds")
     return data
