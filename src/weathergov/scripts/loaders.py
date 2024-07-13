@@ -65,6 +65,9 @@ def historical_data_loader(env: Environment, worker_id: int):
     """
 
     if env is Environment.LOCAL:
+        # NOTE: This loop will go away 100% once we migrate the whole script to AWS!
+        #   This is temporary code while I complete the major part of development.
+        #   I don't want to run the code in AWS until I get something feasible.
         while True:
             # Run the consumption in infinite loop
             consume_historical_data(env=env, worker_id=worker_id)
