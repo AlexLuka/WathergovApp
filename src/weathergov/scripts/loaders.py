@@ -3,9 +3,10 @@ import pytz
 import random
 import logging
 
-from time import time
+from time import time, sleep
 from datetime import datetime
 
+from weathergov.constants import Environment
 from weathergov.utils.redis_utils import update_observation_stations, RedisClient
 from weathergov.utils.stations_utils import get_all_stations, get_station_data
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def observation_station_loader():
-    # TODO Get the information from Redis when the station information was updated last time.
+    # Get the information from Redis when the station information was updated last time.
     #   In other words, when this script was running last time.
     #   Do not run this script more frequently than once a week!
     #   If the script was running last time a week ago and must run every week (scheduled),
@@ -34,7 +35,7 @@ def observation_station_loader():
     # TODO Update the timestamp when the station info was updated
 
 
-def historical_data_loader(env: str, worker_id: int):
+def historical_data_loader(env: Environment, worker_id: int):
     """
         The goal of this loader is to load historical data. If we try to get
         observations from a station we will get only 1 week of data. But there is
@@ -62,30 +63,56 @@ def historical_data_loader(env: str, worker_id: int):
                The difference is going to be determined by env parameter
     :return:
     """
+
+    if env is Environment.LOCAL:
+        while True:
+            # Run the consumption in infinite loop
+            consume_historical_data(env=env, worker_id=worker_id)
+
+            # Sleep for 12 hours
+            sleep(3600 * 12)
+    elif env is Environment.AWS:
+        # In AWS environment we are going to exit automatically if we use
+        # scheduled job. Therefore, no need to do any additional steps.
+        consume_historical_data(env=env, worker_id=worker_id)
+    else:
+        logger.warning(f"Unknown environment: {env}")
+
+
+def consume_historical_data(env: Environment, worker_id: int):
     t_ = time()
 
-    # Create a connection to Redis
     rc = RedisClient()
 
     if worker_id == 0:
         # Check when the last time the queue was filled! If more than 6 days ago, then refill
         ts_last = rc.get_station_data_populated_last_time_ts()
 
-        if time() - ts_last > 3600 * 24 * 6:
-            # If time delta between last update time and the current update time is greater
-            # than 6 days (we assume that we get 7 days of data), and also that we are going
-            # to run this as a scheduled job
+        if env is Environment.AWS:
             rc.create_weather_stations_queue()
-            logger.info(f"Last time data was updated more than 6 days ago. Update is required")
-        else:
-            logger.info(f"Data was collected on "
-                        f"{datetime.fromtimestamp(ts_last, tz=pytz.timezone('America/Chicago'))} "
-                        f"less than 6 days ago: delta={(time() - ts_last)/3600} hours ago")
-            # we must make a return here in order to not update the time when the calculations were
-            # done last time!
-            return
 
-    # Start consuming from weather stations queue and process each station individually
+            # Note that in AWS we are going to run no matter what
+
+        elif env is Environment.LOCAL:
+            # If going to run in AWS then this check is redundant because we must do calculations
+            # no matter what as scheduled job.
+            if time() - ts_last > 3600 * 24 * 6:
+                # If time delta between last update time and the current update time is greater
+                # than 6 days (we assume that we get 7 days of data), and also that we are going
+                # to run this as a scheduled job
+                rc.create_weather_stations_queue()
+                logger.info(f"Last time data was updated more than 6 days ago. Update is required")
+            else:
+                logger.info(f"Data was collected on "
+                            f"{datetime.fromtimestamp(ts_last, tz=pytz.timezone('America/Chicago'))} "
+                            f"less than 6 days ago: delta={(time() - ts_last) / 3600} hours ago")
+                # we must make a return here in order to not update the time when the calculations were
+                # done last time!
+                return
+
+    # Start consuming from weather stations queue and process each station individually.
+    # This must be performed on every worker! If queue ie empty, then there is nothing to
+    # do and can exit.
     while True:
         payload_str = rc.get_station_id_from_queue()
 

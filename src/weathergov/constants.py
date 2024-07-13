@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 """
     This file contains static constants that must not be updated externally
 """
@@ -8,3 +11,8 @@
 APP_NAME = "Weather:a2e2dfa19d6c45d6a92860933322c847"
 
 MISSING_VALUE = -99911999
+
+
+class Environment(Enum):
+    LOCAL = "Local"
+    AWS = "AWS"

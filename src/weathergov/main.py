@@ -2,6 +2,7 @@ import argparse
 
 from dotenv import load_dotenv
 
+from weathergov.constants import Environment
 from weathergov.scripts.loaders import (observation_station_loader,
                                         historical_data_loader,
                                         rt_data_loader)
@@ -17,7 +18,7 @@ from weathergov.utils.logging_utils import init_logger
 """
 
 
-def main(script_name: str, worker_id: int, env: str):
+def main(script_name: str, worker_id: int, env: Environment):
     if script_name == "ObservationStationsLoader":
         logger.info(f"ObservationStationsLoader is running")
         observation_station_loader()
@@ -58,9 +59,13 @@ if __name__ == "__main__":
     # In cloud deployment all the env variables are going to be setup
     # separately, and therefore no need to load them from .env file - there
     # will be no such.
-    if args.environment == "Local":
+
+    env_ = Environment(args.environment)
+    logger.info(f"Running script in {env_} environment")
+
+    if env_ is Environment.LOCAL:
         load_dotenv()
 
     main(script_name=args.script,
          worker_id=args.worker_id,
-         env=args.environment)
+         env=env_)
