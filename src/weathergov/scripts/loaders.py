@@ -1,8 +1,10 @@
 import json
+import pytz
 import random
 import logging
 
 from time import time
+from datetime import datetime
 
 from weathergov.utils.redis_utils import update_observation_stations, RedisClient
 from weathergov.utils.stations_utils import get_all_stations, get_station_data
@@ -75,6 +77,13 @@ def historical_data_loader(env: str, worker_id: int):
             # to run this as a scheduled job
             rc.create_weather_stations_queue()
             logger.info(f"Last time data was updated more than 6 days ago. Update is required")
+        else:
+            logger.info(f"Data was collected on "
+                        f"{datetime.fromtimestamp(ts_last, tz=pytz.timezone('America/Chicago'))} "
+                        f"less than 6 days ago: delta={(time() - ts_last)/3600} hours ago")
+            # we must make a return here in order to not update the time when the calculations were
+            # done last time!
+            return
 
     # Start consuming from weather stations queue and process each station individually
     while True:
