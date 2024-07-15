@@ -1,8 +1,9 @@
 import os
 import json
+import redis
 import logging
 
-from redis import Redis
+from time import time
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class RedisClient:
 
         redis_info = RedisInfo.load()
 
-        self.rc = Redis(
+        self.rc = redis.Redis(
             host=redis_info.host,
             port=redis_info.port,
             password=redis_info.password,
@@ -196,6 +197,11 @@ class RedisClient:
             # This is possible if script returns an empty list
             station_id = None
             last_update_ts = 0
+            logger.warning(f"Failed to execute the script")
+        except redis.exceptions.ResponseError:
+            station_id = None
+            last_update_ts = 0
+            logger.warning(f"Failed to execute the script")
 
         last_update_ts = int(float(last_update_ts))
         return station_id, last_update_ts
@@ -232,9 +238,10 @@ class RedisClient:
             # timestamp when the RT data was loaded
             pipeline.zadd(RedisKeys.STATION_RT_TABLE, {station_id: -1})
 
-        # TODO
-        #  Update the station tracker: how many stations there were on a specific date.
-        #  This is going to be a timeseries. On July 10, 2024 there were 46483 stations
-
         pipeline.execute()
         logger.info(f"Stations info was updated in Redis")
+
+        # Update the station tracker: how many stations there were on a specific date.
+        # This is going to be a timeseries. On July 10, 2024, there were 46483 stations
+        rc_ts = self.rc.ts()
+        rc_ts.add(RedisKeys.TOTAL_STATIONS_NUM, int(time()), len(stations), duplicate_policy="FIRST")
