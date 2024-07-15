@@ -23,7 +23,7 @@ def observation_station_loader():
     #   that we do not miss the next run.
     #   Alternative option would be to run it as a scheduled job/lambda on AWS
     #
-
+    t_ = time()
     # Get all stations from the Weather.gov API
     # There should be about 45000 stations, not too many.
     stations = get_all_stations()
@@ -34,6 +34,7 @@ def observation_station_loader():
     rc.update_observation_stations(stations)
 
     # TODO Update the timestamp when the station info was updated
+    logger.info(f"Stations were updated within {(time() - t_) / 60:.1f} minutes")
 
 
 def historical_data_loader(env: Environment, worker_id: int):
