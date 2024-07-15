@@ -7,7 +7,7 @@ from time import time, sleep
 from datetime import datetime
 
 from weathergov.constants import Environment
-from weathergov.utils.redis_utils import update_observation_stations, RedisClient
+from weathergov.utils.redis_utils import RedisClient
 from weathergov.utils.stations_utils import get_all_stations, get_station_data
 
 
@@ -30,7 +30,8 @@ def observation_station_loader():
     logger.info(f"Random example of station info: {random.choice(stations)}")
 
     # Load all the stations to Redis
-    update_observation_stations(stations)
+    rc = RedisClient()
+    rc.update_observation_stations(stations)
 
     # TODO Update the timestamp when the station info was updated
 

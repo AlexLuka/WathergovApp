@@ -58,6 +58,10 @@ class RedisInfo:
 class RedisKeys:
     STATION_RT_TABLE = "weather_station:weather.gov:last_rt_update"
 
+    # This is RT metric where we are going to keep the number of RT
+    # stations overtime.
+    TOTAL_STATIONS_NUM = "weather_station:weather.gov:total_number_of_stations"
+
 
 class RedisClient:
     def __init__(self):
@@ -196,42 +200,41 @@ class RedisClient:
         last_update_ts = int(float(last_update_ts))
         return station_id, last_update_ts
 
+    def update_observation_stations(self, stations: list):
+        """
+            Save observation stations to Redis HASH
+            under "weather_station:weather.gov:ABCD23"
+            where the latter is the station ID.
 
-# TODO Move this function to a RedisClient class
-def update_observation_stations(stations: list):
-    """
-        Save observation stations to Redis HASH
-        under "weather_station:weather.gov:ABCD23"
-        where the latter is the station ID.
+            In addition, create a set of all the station IDs:
+                "weather_station:weather.gov:station_ids"
 
-        In addition, create a set of all the station IDs:
-            "weather_station:weather.gov:station_ids"
+        :param stations:
+        :return:
+        """
 
-    :param stations:
-    :return:
-    """
+        logger.info(f"Successfully connected to Redis")
 
-    redis_info = RedisInfo.load()
+        pipeline = self.rc.pipeline()
 
-    rc = Redis(
-        host=redis_info.host,
-        port=redis_info.port,
-        password=redis_info.password,
-        decode_responses=True
-    )
-    logger.info(f"Successfully connected to Redis")
+        for station in stations:
+            station_id = station["station_id"]
 
-    pipeline = rc.pipeline()
+            #
+            pipeline.hset(f"weather_station:weather.gov:{station_id}", mapping=station)
 
-    for station in stations:
-        station_id = station["station_id"]
+            #
+            pipeline.sadd("weather_station:weather.gov:station_ids", station_id)
 
-        pipeline.hset(f"weather_station:weather.gov:{station_id}", mapping=station)
-        pipeline.sadd("weather_station:weather.gov:station_ids", station_id)
+            # Add a station to a sorted set with default value -1 - timestamp when it was updated.
+            # First timestamp is going to be -1. When update in real-time we are going to have a
+            # loader that will get the timestamp and update it to another one - actual integer/float
+            # timestamp when the RT data was loaded
+            pipeline.zadd(RedisKeys.STATION_RT_TABLE, {station_id: -1})
 
-    # TODO
-    #  Update the station tracker: how many stations there were on a specific date.
-    #  This is going to be a timeseries. On July 10, 2024 there were 46483 stations
+        # TODO
+        #  Update the station tracker: how many stations there were on a specific date.
+        #  This is going to be a timeseries. On July 10, 2024 there were 46483 stations
 
-    pipeline.execute()
-    logger.info(f"Stations info was updated in Redis")
+        pipeline.execute()
+        logger.info(f"Stations info was updated in Redis")
