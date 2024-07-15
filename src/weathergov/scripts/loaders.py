@@ -153,6 +153,22 @@ def rt_data_loader():
     and pass only endpoint url, Redis key where to get the last update info from,
     and coefficient +-1 that indicates if we want to get data point from past or from
     the future
+
+    Update: on July 15, 2024, I decided to make small change:
+        Let's try to use Redis Sorted Set to keep track when each station was updated last time.
+        Basically, associate an update timestamp with each station. Then, call BZPOPMIN to get
+        the element with the lowest score.
+
+    If the value we get is None/Null, then we must add a station to a "black list" for
+    X hours.
+
+    How to make sure that station is not lost? It may be lost if we pop it and the loader
+    get interrupted. Then the station will not be in the sorted set. Instead, we can actually
+    update the element:
+        - Make a transaction which get the element with the lowest score
+        - And update that element to the largest score.
+
+
     :return:
     """
     pass

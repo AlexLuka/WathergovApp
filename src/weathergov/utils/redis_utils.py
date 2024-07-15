@@ -55,6 +55,10 @@ class RedisInfo:
         return ri
 
 
+class RedisKeys:
+    STATION_RT_TABLE = "weather_station:weather.gov:last_rt_update"
+
+
 class RedisClient:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -70,6 +74,18 @@ class RedisClient:
             socket_keepalive=True,
             socket_timeout=60
         )
+
+        self.script1 = self.rc.register_script(f"""
+        -- Get the station ID with the latest update time
+        local res = redis.call("ZPOPMIN", "{RedisKeys.STATION_RT_TABLE}")
+        local time = redis.call("TIME")
+
+        -- Set the key to the current timestamp
+        redis.call("ZADD", "{RedisKeys.STATION_RT_TABLE}", time[1] * 1000 + time[2] / 1000, res[1])
+
+        -- Return the last time when it calculations were done
+        return res
+        """)
 
     def create_weather_stations_queue(self):
         # Get all station IDs. There should be about 46000 of them
@@ -164,6 +180,21 @@ class RedisClient:
             logger.info(f"{len(ts)} new data points added to {keyword} data for station {station_id}")
 
         self.logger.info(f"Data for station {station_id} have been added to Redis")
+
+    def get_rt_update_station(self):
+        """
+        :return: A station that needs to be updated basd on the value
+            of last_update_ts
+        """
+        try:
+            station_id, last_update_ts = self.script1()
+        except ValueError:
+            # This is possible if script returns an empty list
+            station_id = None
+            last_update_ts = 0
+
+        last_update_ts = int(float(last_update_ts))
+        return station_id, last_update_ts
 
 
 # TODO Move this function to a RedisClient class
