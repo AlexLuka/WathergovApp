@@ -181,7 +181,20 @@ def rt_data_loader():
         # Get the station ID from Redis that has the lowest update timestamp
         station_id, last_update_ts = rc.get_rt_update_station()
 
+        if station_id is None:
+            continue
+
         # Check if station is in blacklist
+        is_in_blacklist, score = rc.is_station_in_blacklist(station_id)
+        if is_in_blacklist:
+            logger.info(f"Station {station_id} is in blacklist")
+
+            # Check fo how long it's been in a blacklist
+            if time() - score <= 3600 * 24:
+                continue
+
+            # It's been more than 24 hours, therefore we can release from blacklist
+            # TODO Remove from Redis blacklist
 
         # Then get the data from weather.gov API
 

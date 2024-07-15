@@ -63,6 +63,11 @@ class RedisKeys:
     # stations overtime.
     TOTAL_STATIONS_NUM = "weather_station:weather.gov:total_number_of_stations"
 
+    # This is a sorted set of stations that were checked at some point of time and
+    # had data missed. If data is missed, we do not call an API, but instead add a
+    # station to that blacklist for a certain amount of time - 24 hours for example.
+    WEATHER_STATIONS_NO_DATA_BLACKLIST = "weather_station:weather.gov:no_data_stations_blacklist"
+
 
 class RedisClient:
     def __init__(self):
@@ -245,3 +250,10 @@ class RedisClient:
         # This is going to be a timeseries. On July 10, 2024, there were 46483 stations
         rc_ts = self.rc.ts()
         rc_ts.add(RedisKeys.TOTAL_STATIONS_NUM, int(time()), len(stations), duplicate_policy="FIRST")
+
+    def is_station_in_blacklist(self, station_id: str) -> (bool, float):
+        score = self.rc.zscore(RedisKeys.WEATHER_STATIONS_NO_DATA_BLACKLIST, station_id)
+
+        if score is None:
+            return False, score
+        return True, score
