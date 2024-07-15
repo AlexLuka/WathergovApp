@@ -171,6 +171,24 @@ def rt_data_loader():
         - And update that element to the largest score.
 
 
+    This script must run forever and update all the stations in real-time
+
     :return:
     """
-    pass
+    rc = RedisClient()
+
+    while True:
+        # Get the station ID from Redis that has the lowest update timestamp
+        station_id, last_update_ts = rc.get_rt_update_station()
+
+        # Check if station is in blacklist
+
+        # Then get the data from weather.gov API
+
+        # And insert data to Redis
+        #   - The RT data
+        #   - The black list if station has no data. Add to sorted set as well
+        #     where the score will be the time when it was updated the last time.
+        #     Keep stations in a black list for 24 hours! (configurable parameter)
+
+
