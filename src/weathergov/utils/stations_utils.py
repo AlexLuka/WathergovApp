@@ -185,3 +185,50 @@ def get_station_data(station_id: str) -> dict:
             data[my_key].append(value)
     logger.debug(f"get_station_data() run within {time() - t_:.1f} seconds")
     return data
+
+
+def get_station_data_rt(station_id: str) -> dict:
+    """
+
+    :param station_id:
+    :return:
+    """
+
+    t_ = time()
+    data = {
+        "timestamp": None,
+        "temperature": None,
+        "dew_point": None,
+        "wind_direction": None,
+        "wind_speed": None,
+        "wind_gust": None,
+        "barometric_pressure": None,
+        "sea_level_pressure": None,
+        "visibility": None,
+        "precipitation_last_3h": None,
+        "relative_humidity": None,
+        "wind_chill": None,
+        "heat_index": None
+    }
+
+    weather_gov_api_url = os.environ.get('WEATHER_GOV_API_URL')
+    url_station_link = f"{weather_gov_api_url}/stations/{station_id}/observations"
+
+    headers = {
+        "User-Agent": APP_NAME
+    }
+
+    response = requests.get(url_station_link, headers=headers)
+
+    if response.status_code != 200:
+        logger.warning(f"Got status code {response.status_code} for station {station_id}")
+        return data
+
+    # Get response in JSON format
+    rj = response.json()
+
+    if "properties" not in rj.keys():
+        logger.warning(f"Failre to find 'properties' key in a response for station {station_id}")
+
+    properties: dict
+    properties = rj['properties']
