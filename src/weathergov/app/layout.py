@@ -1,6 +1,29 @@
+# import pandas as pd
+# import plotly.express as px
+import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
-from dash import html
+from dash import html, dcc
+
+
+# us_cities = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/us-cities-top-1k.csv")
+
+
+def get_map() -> go.Figure:
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scattermapbox()
+    )
+
+    fig.update_layout(
+        autosize=True,
+        mapbox_style="open-street-map",
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 90}
+    )
+
+    return fig
 
 
 def get_navbar():
@@ -75,19 +98,24 @@ def get_layout():
             dbc.Row(
                 [
                     dbc.Col(
-                        html.P("This is column 3"),
+                        # html.P("This is column 3"),
+                        dcc.Graph(
+                            figure=get_map(),
+                            style={"height": "100%"}
+                        ),
                         width=9,
-                        style={"height": "100%", "background-color": "blue"},
+                        style={"background-color": "blue"},
                     ),
                     dbc.Col(
                         html.P("This is column 4"),
                         width=3,
-                        style={"height": "100%", "background-color": "cyan"},
+                        style={"background-color": "cyan"},
                     ),
                 ],
                 class_name="h-100",
             )
         ],
-        # style={"height": "100vh"},
+        style={"height": "90vh"},
+        class_name="mt-12",
         fluid=True
     )
