@@ -1,5 +1,7 @@
 import os
 import json
+
+import pandas as pd
 import redis
 import logging
 
@@ -257,3 +259,13 @@ class RedisClient:
         if score is None:
             return False, score
         return True, score
+
+    def get_observation_stations_info(self):
+        station_ids = list(self.rc.smembers("weather_station:weather.gov:station_ids"))
+
+        pipeline = self.rc.pipeline()
+
+        for station_id in station_ids:
+            pipeline.hgetall(f"weather_station:weather.gov:{station_id}")
+        data = pipeline.execute()
+        return pd.DataFrame(data)

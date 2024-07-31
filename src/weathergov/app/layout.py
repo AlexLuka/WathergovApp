@@ -4,18 +4,29 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 
-def get_map() -> go.Figure:
+def get_map(app) -> go.Figure:
+    #
+    #
+    # Get the data
+    df = app.rc.get_observation_stations_info()
+
+    #
+    #
     fig = go.Figure()
 
     fig.add_trace(
-        go.Scattermapbox()
+        go.Scattermapbox(
+            lat=df['latitude'],
+            lon=df['longitude'],
+            mode='markers'
+        )
     )
 
     fig.update_layout(
         autosize=True,
         mapbox_style="open-street-map",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 90}
+        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 55}
     )
 
     return fig
@@ -71,7 +82,7 @@ def get_navbar():
     return navbar
 
 
-def get_layout():
+def get_layout(app):
     return dbc.Container(
         [
             get_navbar(),
@@ -80,7 +91,7 @@ def get_layout():
                     dbc.Col(
                         # html.P("This is column 3"),
                         dcc.Graph(
-                            figure=get_map(),
+                            figure=get_map(app),
                             style={"height": "100%"}
                         ),
                         width=9,
