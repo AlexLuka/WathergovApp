@@ -1,12 +1,7 @@
-# import pandas as pd
-# import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
 from dash import html, dcc
-
-
-# us_cities = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/us-cities-top-1k.csv")
 
 
 def get_map() -> go.Figure:
@@ -80,21 +75,6 @@ def get_layout():
     return dbc.Container(
         [
             get_navbar(),
-            # dbc.Row(
-            #     [
-            #         dbc.Col(
-            #             html.P("This is column 1"),
-            #             width=12,
-            #             style={"height": "100px", "background-color": "red"},
-            #         ),
-            #         # dbc.Col(
-            #         #     html.P("This is column 2"),
-            #         #     width=4,
-            #         #     style={"height": "100%", "background-color": "green"},
-            #         # ),
-            #     ],
-            #     # class_name="h-25",
-            # ),
             dbc.Row(
                 [
                     dbc.Col(
