@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
 from dash import html, dcc
+from weathergov.app.components import Components
 
 
 def get_map(app) -> go.Figure:
@@ -26,7 +27,8 @@ def get_map(app) -> go.Figure:
         autosize=True,
         mapbox_style="open-street-map",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 55}
+        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 55},
+        clickmode='event+select'
     )
 
     return fig
@@ -92,13 +94,14 @@ def get_layout(app):
                         # html.P("This is column 3"),
                         dcc.Graph(
                             figure=get_map(app),
-                            style={"height": "100%"}
+                            style={"height": "100%"},
+                            id=Components.GraphMap
                         ),
                         width=9,
                         style={"background-color": "blue"},
                     ),
                     dbc.Col(
-                        html.P("This is column 4"),
+                        html.P("This is column 4", id='click-data'),
                         width=3,
                         style={"background-color": "cyan"},
                     ),
