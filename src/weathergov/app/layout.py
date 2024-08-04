@@ -1,3 +1,4 @@
+import pandas as pd
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
@@ -5,11 +6,18 @@ from dash import html, dcc
 from weathergov.app.components import Components
 
 
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+
+
 def get_map(app) -> go.Figure:
     #
     #
     # Get the data
     df = app.rc.get_observation_stations_info()
+    app.df = df
+
+    # print(df.head())
 
     #
     #
@@ -19,7 +27,17 @@ def get_map(app) -> go.Figure:
         go.Scattermapbox(
             lat=df['latitude'],
             lon=df['longitude'],
-            mode='markers'
+            mode='markers',
+            customdata=df[['station_name', 'station_id', 'elevation', 'station_timezone', 'url']],
+            hovertemplate="<b>Station name:</b> %{customdata[0]}<br>" +
+                          "<b>Station ID:</b> %{customdata[1]}<br><br>" +
+                          "Latitude: %{lat:,.6f}°<br>" +
+                          "Longitude: %{lon:.6f}°<br>" +
+                          "Elevation: %{customdata[2]:,.1f}<br>" +
+                          "Time zone: %{customdata[3]}<br>" +
+                          "URL: %{customdata[4]}" +
+                          "<extra></extra>",
+            meta=df[['station_name', 'station_id', 'elevation']]
         )
     )
 
@@ -28,7 +46,7 @@ def get_map(app) -> go.Figure:
         mapbox_style="open-street-map",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 55},
-        clickmode='event+select'
+        # clickmode='event+select'
     )
 
     return fig
