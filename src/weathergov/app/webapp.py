@@ -26,7 +26,9 @@ app = Dash(
 
 
 @callback(
-    Output('click-data', 'children'),
+    # Output('click-data', 'children'),
+    Output(Components.WeatherStationInfoPanelName, 'children'),
+    Output(Components.WeatherStationInfoPanelStationID, "children"),
     Input(Components.GraphMap, 'clickData'))
 def display_click_data(click_data):
     """
@@ -38,21 +40,34 @@ def display_click_data(click_data):
     if click_data is None:
         # If the click_data is None, therefore no data is present.
         # This is due to the event was fired on load
-        return ""
+        return "", ""
 
     point = click_data['points'][0]
 
-    # Additional data is included into customdata
+    # Example of a 'point' data
+    # {
+    #   "curveNumber": 0,
+    #   "pointNumber": 17097,
+    #   "pointIndex": 17097,
+    #   "lon": "-87.05",
+    #   "lat": "44.055",
+    #   "bbox": {
+    #       "x0": 861.5483870967741,
+    #       "x1": 863.5483870967741,
+    #       "y0": 367.852296661568,
+    #       "y1": 369.852296661568
+    #   },
+    #   "customdata": [
+    #       "RAWLEY POINT EAST, WI (269)",
+    #       "NDBC45210",
+    #       "0",
+    #       "America/Chicago",
+    #       "https://api.weather.gov/stations/NDBC45210"
+    #   ]
+    # }
 
-    # point_index = point['pointIndex']
-
-    # point['station_id'] = app.df.loc[point_index, 'station_id']
-    # point['station_name'] = app.df.loc[point_index, 'station_name']
-    # point['station_timezone'] = app.df.loc[point_index, 'station_timezone']
-    # point['elevation'] = app.df.loc[point_index, 'elevation']
-    # point['station_url'] = app.df.loc[point_index, 'url']
-
-    return json.dumps(point, indent=2)
+    # return json.dumps(point, indent=2)
+    return point['customdata'][0], point['customdata'][1]
 
 
 def main():

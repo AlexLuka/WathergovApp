@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 
 from dash import html, dcc
 from weathergov.app.components import Components
+from weathergov.app.constants import DataLabels
 
 
 pd.set_option('display.max_columns', None)
@@ -28,7 +29,7 @@ def get_map(app) -> go.Figure:
             lat=df['latitude'],
             lon=df['longitude'],
             mode='markers',
-            customdata=df[['station_name', 'station_id', 'elevation', 'station_timezone', 'url']],
+            customdata=df[DataLabels.FigureCustomData],
             hovertemplate="<b>Station name:</b> %{customdata[0]}<br>" +
                           "<b>Station ID:</b> %{customdata[1]}<br><br>" +
                           "Latitude: %{lat:,.6f}°<br>" +
@@ -37,7 +38,7 @@ def get_map(app) -> go.Figure:
                           "Time zone: %{customdata[3]}<br>" +
                           "URL: %{customdata[4]}" +
                           "<extra></extra>",
-            meta=df[['station_name', 'station_id', 'elevation']]
+            # meta=df[['station_name', 'station_id', 'elevation']]
         )
     )
 
@@ -102,6 +103,37 @@ def get_navbar():
     return navbar
 
 
+def get_weather_station_info_panel():
+    left_side_width = 3
+    right_side_width = 9
+
+    return dbc.Container(
+        dbc.Stack(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label("Station Name:"), width=left_side_width),
+                        dbc.Col(width=right_side_width, id=Components.WeatherStationInfoPanelName)
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label("Station ID:"), width=left_side_width),
+                        dbc.Col(width=right_side_width, id=Components.WeatherStationInfoPanelStationID)
+                    ]
+                ),
+                # TODO Add other attrbutes here
+                dbc.Row(),
+                dbc.Row(),
+                dbc.Row(),
+                dbc.Row(),
+            ],
+            gap=1
+        ),
+        fluid=True
+    )
+
+
 def get_layout(app):
     return dbc.Container(
         [
@@ -119,7 +151,8 @@ def get_layout(app):
                         style={"background-color": "blue"},
                     ),
                     dbc.Col(
-                        html.P("This is column 4", id='click-data'),
+                        # html.P("This is column 4", id='click-data'),
+                        get_weather_station_info_panel(),
                         width=3,
                         style={"background-color": "cyan"},
                     ),
