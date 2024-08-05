@@ -103,6 +103,154 @@ def get_navbar():
     return navbar
 
 
+def get_collapse_item(item_label, item_label_id, collapse_id, graph_id):
+    temp_fig = go.Figure()
+    temp_fig.update_layout(
+        autosize=True,
+        height=300,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    )
+
+    return [
+        dbc.Button(
+            item_label,
+            id=item_label_id,
+            class_name="d-grid col-12",
+            color="light"
+        ),
+        dbc.Collapse(
+            dcc.Graph(
+                figure=temp_fig,
+                style={"height": "100%"},
+                id=graph_id
+            ),
+            id=collapse_id,
+            is_open=False,
+        )
+    ]
+
+
+def get_collapse():
+    # temp_fig = go.Figure()
+    # temp_fig.update_layout(
+    #     autosize=True,
+    #     height=300,
+    #     margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    # )
+
+    collapse = []
+    labels = [
+        "Temperature",
+        "Pressure",
+        "Wind Speed",
+        "Wind Direction",
+        "Humidity"
+    ]
+
+    for i in range(5):
+        collapse.extend(
+            get_collapse_item(
+                labels[i],
+                Components.get_collapse_label_id(labels[i]),
+                Components.get_collapse_id(labels[i]),
+                Components.get_collapse_graph_id(labels[i])
+            )
+        )
+
+    return html.Div(collapse)
+            #
+            #
+            # dbc.Button(
+            #     "Temperature",
+            #     id="collapse-button-1",
+            #     class_name="d-grid col-12",
+            #     color="light",
+            #     # width=12
+            # ),
+            # dbc.Collapse(
+            #     dcc.Graph(
+            #         figure=temp_fig,
+            #         style={"height": "100%"}
+            #     ),
+            #     id="collapse-1",
+            #     is_open=False,
+            # ),
+            #
+            #
+            # dbc.Button(
+            #     "Pressure",
+            #     id="collapse-button-2",
+            #     class_name="d-grid col-12",
+            #     color="light",
+            #     # width=12
+            # ),
+            # dbc.Collapse(
+            #     # dbc.Card(dbc.CardBody("This content is hidden in the collapse")),
+            #     dcc.Graph(
+            #         figure=temp_fig,
+            #         style={"height": "100%"}
+            #     ),
+            #     id="collapse-2",
+            #     is_open=False,
+            # ),
+            #
+            #
+            # dbc.Button(
+            #     "Wind speed",
+            #     id="collapse-button-3",
+            #     class_name="d-grid col-12",
+            #     color="light",
+            #     # width=12
+            # ),
+            # dbc.Collapse(
+            #     # dbc.Card(dbc.CardBody("This content is hidden in the collapse")),
+            #     dcc.Graph(
+            #         figure=temp_fig,
+            #         style={"height": "100%"}
+            #     ),
+            #     id="collapse-3",
+            #     is_open=False,
+            # ),
+            #
+            #
+            # dbc.Button(
+            #     "Wind Direction",
+            #     id="collapse-button-4",
+            #     class_name="d-grid col-12",
+            #     color="light",
+            #     # width=12
+            # ),
+            # dbc.Collapse(
+            #     # dbc.Card(dbc.CardBody("This content is hidden in the collapse")),
+            #     dcc.Graph(
+            #         figure=temp_fig,
+            #         style={"height": "100%"}
+            #     ),
+            #     id="collapse-4",
+            #     is_open=False,
+            # ),
+            #
+            #
+            # dbc.Button(
+            #     "Humidity",
+            #     id="collapse-button-5",
+            #     class_name="d-grid col-12",
+            #     color="light",
+            #     # width=12
+            # ),
+            # dbc.Collapse(
+            #     # dbc.Card(dbc.CardBody("This content is hidden in the collapse")),
+            #     dcc.Graph(
+            #         figure=temp_fig,
+            #         style={"height": "100%"}
+            #     ),
+            #     id="collapse-5",
+            #     is_open=False,
+            # )
+    #     ]
+    # )
+
+
 def get_rt_graph_pane():
 
     temp_fig = go.Figure()
@@ -115,13 +263,13 @@ def get_rt_graph_pane():
     return dbc.Container(
         dbc.Stack(
             [
-                dbc.Row(),
-                dbc.Row(
-                    dcc.Graph(
-                        figure=temp_fig,
-                        style={"height": "100%"}
-                    )
-                )
+                get_collapse(),
+                # dbc.Row(
+                #     dcc.Graph(
+                #         figure=temp_fig,
+                #         style={"height": "100%"}
+                #     )
+                # )
             ]
         )
     )

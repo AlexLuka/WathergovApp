@@ -1,8 +1,8 @@
-import json
+# import json
 import logging
 import dash_bootstrap_components as dbc
 
-from dash import Dash, Input, Output, callback
+from dash import Dash, Input, Output, State, callback
 from dotenv import load_dotenv
 # from dash_bootstrap_components.themes import LUMEN
 
@@ -81,6 +81,62 @@ def display_click_data(click_data):
                 active=True
             ),
             f"{point['customdata'][2]} {elevation_units}")
+
+
+# Current order: [
+#         "Temperature",
+#         "Pressure",
+#         "Wind Speed",
+#         "Wind Direction",
+#         "Humidity"
+#     ]
+# need to make it dynamic in the future
+@callback(
+    Output(Components.get_collapse_id("Temperature"), "is_open"),
+    Output(Components.get_collapse_id("Pressure"), "is_open"),
+    Output(Components.get_collapse_id("Wind Speed"), "is_open"),
+    Output(Components.get_collapse_id("Wind Direction"), "is_open"),
+    Output(Components.get_collapse_id("Humidity"), "is_open"),
+    #
+    Output(Components.get_collapse_label_id("Temperature"), "n_clicks"),
+    Output(Components.get_collapse_label_id("Pressure"), "n_clicks"),
+    Output(Components.get_collapse_label_id("Wind Speed"), "n_clicks"),
+    Output(Components.get_collapse_label_id("Wind Direction"), "n_clicks"),
+    Output(Components.get_collapse_label_id("Humidity"), "n_clicks"),
+    #
+    Input(Components.get_collapse_label_id("Temperature"), "n_clicks"),
+    Input(Components.get_collapse_label_id("Pressure"), "n_clicks"),
+    Input(Components.get_collapse_label_id("Wind Speed"), "n_clicks"),
+    Input(Components.get_collapse_label_id("Wind Direction"), "n_clicks"),
+    Input(Components.get_collapse_label_id("Humidity"), "n_clicks"),
+    #
+    State(Components.get_collapse_id("Temperature"), "is_open"),
+    State(Components.get_collapse_id("Pressure"), "is_open"),
+    State(Components.get_collapse_id("Wind Speed"), "is_open"),
+    State(Components.get_collapse_id("Wind Direction"), "is_open"),
+    State(Components.get_collapse_id("Humidity"), "is_open"),
+)
+def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open_4, is_open_5):
+    """
+        The logic is the following:
+        We are going to close all the collapses and open the one that have been clicked
+    """
+
+    # Here the step is failing if the n-ith are None values
+    try:
+        ind = [n1, n2, n3, n4, n5].index(1)
+    except ValueError:
+        return is_open_1, is_open_2, is_open_3, is_open_4, is_open_5, 0, 0, 0, 0, 0
+
+    is_open = [is_open_1, is_open_2, is_open_3, is_open_4, is_open_5]
+
+    for i in range(5):
+        if i == ind:
+            is_open[i] = not is_open[i]
+        else:
+            is_open[i] = False
+
+    return is_open + [0, 0, 0, 0, 0]
 
 
 def main():
