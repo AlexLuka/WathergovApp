@@ -7,3 +7,5 @@ class Components(str, Enum):
 
     WeatherStationInfoPanelName = "ws-info-panel-name"
     WeatherStationInfoPanelStationID = "ws-info-panel-station-id"
+    WeatherStationInfoPanelElevationAboveGround = "ws-info-panel-elevation-above-round"
+    WeatherStationInfoPanelStationURL = "ws-info-panel-station-url"

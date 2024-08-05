@@ -18,7 +18,7 @@ def get_map(app) -> go.Figure:
     df = app.rc.get_observation_stations_info()
     app.df = df
 
-    # print(df.head())
+    print(df.head())
 
     #
     #
@@ -103,29 +103,61 @@ def get_navbar():
     return navbar
 
 
+def get_rt_graph_pane():
+
+    temp_fig = go.Figure()
+    temp_fig.update_layout(
+        autosize=True,
+        height=300,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    )
+
+    return dbc.Container(
+        dbc.Stack(
+            [
+                dbc.Row(),
+                dbc.Row(
+                    dcc.Graph(
+                        figure=temp_fig,
+                        style={"height": "100%"}
+                    )
+                )
+            ]
+        )
+    )
+
+
 def get_weather_station_info_panel():
-    left_side_width = 3
-    right_side_width = 9
+    left_side_width = 4
+    right_side_width = 8
 
     return dbc.Container(
         dbc.Stack(
             [
                 dbc.Row(
+                    dbc.Label("Station Information", size='lg')
+                ),
+                dbc.Row(
                     [
-                        dbc.Col(html.Label("Station Name:"), width=left_side_width),
+                        dbc.Col(html.Label("Name:", style={"justify-content": "right"}), width=left_side_width),
                         dbc.Col(width=right_side_width, id=Components.WeatherStationInfoPanelName)
                     ]
                 ),
                 dbc.Row(
                     [
-                        dbc.Col(html.Label("Station ID:"), width=left_side_width),
+                        dbc.Col(html.Label("ID:"), width=left_side_width),
                         dbc.Col(width=right_side_width, id=Components.WeatherStationInfoPanelStationID)
                     ]
                 ),
                 # TODO Add other attrbutes here
-                dbc.Row(),
-                dbc.Row(),
-                dbc.Row(),
+                dbc.Row(
+                    [
+                        dbc.Col(html.Label("Elevation (m):"), width=left_side_width),
+                        dbc.Col(width=right_side_width, id=Components.WeatherStationInfoPanelElevationAboveGround)
+                    ]
+                ),
+                html.Hr(),
+                dbc.Row(get_rt_graph_pane()),
                 dbc.Row(),
             ],
             gap=1
@@ -154,7 +186,7 @@ def get_layout(app):
                         # html.P("This is column 4", id='click-data'),
                         get_weather_station_info_panel(),
                         width=3,
-                        style={"background-color": "cyan"},
+                        # style={"background-color": "cyan"},
                     ),
                 ],
                 class_name="h-100",

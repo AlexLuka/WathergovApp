@@ -29,6 +29,7 @@ app = Dash(
     # Output('click-data', 'children'),
     Output(Components.WeatherStationInfoPanelName, 'children'),
     Output(Components.WeatherStationInfoPanelStationID, "children"),
+    Output(Components.WeatherStationInfoPanelElevationAboveGround, "children"),
     Input(Components.GraphMap, 'clickData'))
 def display_click_data(click_data):
     """
@@ -40,9 +41,12 @@ def display_click_data(click_data):
     if click_data is None:
         # If the click_data is None, therefore no data is present.
         # This is due to the event was fired on load
-        return "", ""
+        return "", "", ""
 
     point = click_data['points'][0]
+
+    elevation_units = point['customdata'][5]
+    elevation_units = elevation_units.split(":")[-1]
 
     # Example of a 'point' data
     # {
@@ -62,12 +66,21 @@ def display_click_data(click_data):
     #       "NDBC45210",
     #       "0",
     #       "America/Chicago",
-    #       "https://api.weather.gov/stations/NDBC45210"
+    #       "https://api.weather.gov/stations/NDBC45210",
+    #       "wmoUnit:m"
     #   ]
     # }
 
     # return json.dumps(point, indent=2)
-    return point['customdata'][0], point['customdata'][1]
+    return (point['customdata'][0],
+            dbc.NavLink(
+                point['customdata'][1],
+                href=point['customdata'][4],
+                external_link='True',
+                target='_blank',
+                active=True
+            ),
+            f"{point['customdata'][2]} {elevation_units}")
 
 
 def main():
