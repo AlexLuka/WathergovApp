@@ -2,6 +2,7 @@
 import logging
 import dash_bootstrap_components as dbc
 
+from time import time
 from dash import Dash, Input, Output, State, callback
 from dotenv import load_dotenv
 # from dash_bootstrap_components.themes import LUMEN
@@ -9,6 +10,7 @@ from dotenv import load_dotenv
 from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
+from weathergov.app.viz import get_ts_figure
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,7 @@ app = Dash(
     ],
     add_log_handler=logger
 )
+app.rc = None
 
 
 @callback(
@@ -30,6 +33,7 @@ app = Dash(
     Output(Components.WeatherStationInfoPanelName, 'children'),
     Output(Components.WeatherStationInfoPanelStationID, "children"),
     Output(Components.WeatherStationInfoPanelElevationAboveGround, "children"),
+    Output(Components.get_collapse_graph_id("temperature"), "figure"),
     Input(Components.GraphMap, 'clickData'))
 def display_click_data(click_data):
     """
@@ -41,7 +45,7 @@ def display_click_data(click_data):
     if click_data is None:
         # If the click_data is None, therefore no data is present.
         # This is due to the event was fired on load
-        return "", "", ""
+        return "", "", "", {}
 
     point = click_data['points'][0]
 
@@ -71,16 +75,30 @@ def display_click_data(click_data):
     #   ]
     # }
 
+    station_id = point['customdata'][1]
+    ts_now = int(time() * 1000)
+
+    # Get 1 week of temperature data for selected station by station iD
+    temperature_x, temperature_y = app.rc.get_timeseries_data(
+        station_id=station_id,
+        data_keyword="temperature",
+        ts_from=ts_now - 24 * 3600 * 1000 * 7,
+        ts_to=ts_now)
+    print(f"Temp X: {temperature_x}")
+    print(f"Temp Y: {temperature_y}")
+
     # return json.dumps(point, indent=2)
     return (point['customdata'][0],
             dbc.NavLink(
-                point['customdata'][1],
+                station_id,
                 href=point['customdata'][4],
                 external_link='True',
                 target='_blank',
                 active=True
             ),
-            f"{point['customdata'][2]} {elevation_units}")
+            f"{point['customdata'][2]} {elevation_units}",
+            get_ts_figure(x=temperature_x, y=temperature_y)
+            )
 
 
 # Current order: [

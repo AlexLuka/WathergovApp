@@ -70,6 +70,10 @@ class RedisKeys:
     # station to that blacklist for a certain amount of time - 24 hours for example.
     WEATHER_STATIONS_NO_DATA_BLACKLIST = "weather_station:weather.gov:no_data_stations_blacklist"
 
+    @staticmethod
+    def get_rt_data_key(station_id, data_keyword):
+        return f"weather_station:weather.gov:{station_id}:data:{data_keyword}"
+
 
 class RedisClient:
     def __init__(self):
@@ -184,8 +188,12 @@ class RedisClient:
                 tsi_unix = int(datetime.strptime(tsi, "%Y-%m-%dT%H:%M:%S%z").timestamp() * 1000)
 
                 # Add to timeseries
-                rc_ts_pipe.add(f"weather_station:weather.gov:{station_id}:data:{keyword}",
-                               tsi_unix, value,
+                # rc_ts_pipe.add(f"weather_station:weather.gov:{station_id}:data:{keyword}",
+                #                tsi_unix, value,
+                #                duplicate_policy="FIRST")
+                rc_ts_pipe.add(RedisKeys.get_rt_data_key(station_id, keyword),
+                               tsi_unix,
+                               value,
                                duplicate_policy="FIRST")
             # Execute transaction
             rc_ts_pipe.execute()
@@ -269,3 +277,30 @@ class RedisClient:
             pipeline.hgetall(f"weather_station:weather.gov:{station_id}")
         data = pipeline.execute()
         return pd.DataFrame(data)
+
+    def get_timeseries_data(self,
+                            station_id: str,
+                            data_keyword: str,
+                            ts_from: int,
+                            ts_to: int) -> (list, list):
+        data: list
+        try:
+            data = self.rc.ts().range(
+                RedisKeys.get_rt_data_key(station_id, data_keyword),
+                ts_from,
+                ts_to)
+        except redis.ResponseError:
+            return [], []
+
+        n = 0
+        while n < len(data):
+            if data[n][1] < -99911990:
+                data.pop(n)
+                continue
+            n += 1
+
+        try:
+            x, y = zip(*data)
+        except ValueError:
+            return [], []
+        return x, y
