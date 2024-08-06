@@ -1,5 +1,7 @@
 import os
 import json
+
+import numpy as np
 import redis
 import pandas as pd
 import typing
@@ -160,6 +162,8 @@ class RedisClient:
         # TODO Create a timeseries for each parameter to avoid
         #   TSDB: the key does not exist error
 
+        # TODO Add the last value of temperature to the station info hash
+
         #
         # At this point we should have timestamp, let's go over all the possible
         # data metrics and add all of them as timeseries data to Redis
@@ -193,11 +197,15 @@ class RedisClient:
                 # Convert time to unix epoch timestamp in milliseconds
                 tsi_unix = int(datetime.strptime(tsi, "%Y-%m-%dT%H:%M:%S%z").timestamp() * 1000)
 
+                key = RedisKeys.get_rt_data_key(station_id, keyword)
+
+                # rc_ts_pipe.create(key)
+
                 # Add to timeseries
                 # rc_ts_pipe.add(f"weather_station:weather.gov:{station_id}:data:{keyword}",
                 #                tsi_unix, value,
                 #                duplicate_policy="FIRST")
-                rc_ts_pipe.add(RedisKeys.get_rt_data_key(station_id, keyword),
+                rc_ts_pipe.add(key,
                                tsi_unix,
                                value,
                                duplicate_policy="FIRST")
@@ -282,7 +290,48 @@ class RedisClient:
         for station_id in station_ids:
             pipeline.hgetall(f"weather_station:weather.gov:{station_id}")
         data = pipeline.execute()
-        return pd.DataFrame(data)
+
+        # Add the most recent data to the plot?
+        for station_id in station_ids:
+            pipeline.ts().get(RedisKeys.get_rt_data_key(station_id, "temperature"))
+        ts_data = pipeline.execute(raise_on_error=False)
+
+        ts_data_updated = list()
+
+        for value, station_id in zip(ts_data, station_ids):
+            if isinstance(value, tuple):
+                ts_data_updated.append(
+                    {
+                        'station_id': station_id,
+                        'ts': value[0],
+                        'temperature': value[1] if value[1] > -99911990 else np.nan
+                    }
+                )
+            elif isinstance(value, redis.exceptions.ResponseError):
+                ts_data_updated.append(
+                    {
+                        'station_id': station_id,
+                        'ts': int(time() * 1000),
+                        'temperature': np.nan
+                    }
+                )
+            else:
+                ts_data_updated.append(
+                    {
+                        'station_id': station_id,
+                        'ts': int(time() * 1000),
+                        'temperature': np.nan
+                    }
+                )
+            # print(f"value={value}, type={type(value)}")
+        # print(ts_data)
+        # print(len(ts_data), len(station_ids))
+
+        df_ts = pd.DataFrame(ts_data_updated)
+        df = pd.DataFrame(data)
+
+        # return pd.DataFrame(data)
+        return pd.merge(df, df_ts, on='station_id')
 
     def get_timeseries_data(self,
                             station_id: str,

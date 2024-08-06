@@ -1,8 +1,11 @@
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
 from dash import html, dcc
+from plotly.express.colors import sample_colorscale
+
 from weathergov.app.components import Components
 from weathergov.app.constants import DataLabels
 
@@ -18,7 +21,33 @@ def get_map(app) -> go.Figure:
     df = app.rc.get_observation_stations_info()
     app.df = df
 
-    print(df.head())
+    # print(df.head())
+
+    # Create a colormap
+    ind_nan = df['temperature'].isna()
+
+    # Fill nan values with mean
+    temperature_mean = df['temperature'].mean()
+    df.loc[ind_nan, 'temperature'] = temperature_mean
+
+    x_min = df['temperature'].min()
+    x_max = df['temperature'].max()
+
+    # -8.33 49.93 : that is going to be good
+    # print(x_min, x_max)
+
+    # print(df.head())
+    # print(df['temperature'].isna().sum())
+    df['temperature'] = df['temperature'].apply(lambda x: (x - x_min) / (x_max - x_min))
+
+    df['color'] = sample_colorscale('jet', df['temperature'])
+
+    df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    # c[ind_nan] = 'rgba(100, 100, 100, 0.5)'
+
+    # print(c)
+    # print(ind_nan)
+    # print(temperature_mean)
 
     #
     #
@@ -38,6 +67,9 @@ def get_map(app) -> go.Figure:
                           "Time zone: %{customdata[3]}<br>" +
                           "URL: %{customdata[4]}" +
                           "<extra></extra>",
+            marker={
+                "color": df['color']
+            }
             # meta=df[['station_name', 'station_id', 'elevation']]
         )
     )
