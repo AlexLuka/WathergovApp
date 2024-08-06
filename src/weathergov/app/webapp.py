@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
-from weathergov.app.viz import get_ts_figure
+from weathergov.app.viz import get_ts_figure, get_ts_figure_polar, get_default_figure
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,13 @@ app.rc = None
     Output(Components.WeatherStationInfoPanelName, 'children'),
     Output(Components.WeatherStationInfoPanelStationID, "children"),
     Output(Components.WeatherStationInfoPanelElevationAboveGround, "children"),
+    #
+    # Figures output
     Output(Components.get_collapse_graph_id("temperature"), "figure"),
+    Output(Components.get_collapse_graph_id("pressure"), "figure"),
+    Output(Components.get_collapse_graph_id("wind speed"), "figure"),
+    Output(Components.get_collapse_graph_id("wind direction"), "figure"),
+    Output(Components.get_collapse_graph_id("Humidity"), "figure"),
     Input(Components.GraphMap, 'clickData'))
 def display_click_data(click_data):
     """
@@ -45,7 +51,8 @@ def display_click_data(click_data):
     if click_data is None:
         # If the click_data is None, therefore no data is present.
         # This is due to the event was fired on load
-        return "", "", "", {}
+        fig = get_default_figure()
+        return "", "", "", fig, fig, fig, fig, fig
 
     point = click_data['points'][0]
 
@@ -76,16 +83,24 @@ def display_click_data(click_data):
     # }
 
     station_id = point['customdata'][1]
+    time_zone = point['customdata'][3]
     ts_now = int(time() * 1000)
 
     # Get 1 week of temperature data for selected station by station iD
-    temperature_x, temperature_y = app.rc.get_timeseries_data(
+    data = app.rc.get_timeseries_data_multi(
         station_id=station_id,
-        data_keyword="temperature",
+        data_keywords=["temperature", "barometric_pressure", "wind_speed", "wind_direction", "relative_humidity"],
         ts_from=ts_now - 24 * 3600 * 1000 * 7,
-        ts_to=ts_now)
-    print(f"Temp X: {temperature_x}")
-    print(f"Temp Y: {temperature_y}")
+        ts_to=ts_now
+    )
+
+    # temperature_x, temperature_y = app.rc.get_timeseries_data(
+    #     station_id=station_id,
+    #     data_keyword="temperature",
+    #     ts_from=ts_now - 24 * 3600 * 1000 * 7,
+    #     ts_to=ts_now)
+    # print(f"Temp X: {temperature_x}")
+    # print(f"Temp Y: {temperature_y}")
 
     # return json.dumps(point, indent=2)
     return (point['customdata'][0],
@@ -97,7 +112,11 @@ def display_click_data(click_data):
                 active=True
             ),
             f"{point['customdata'][2]} {elevation_units}",
-            get_ts_figure(x=temperature_x, y=temperature_y)
+            get_ts_figure(x=data['temperature'][0], y=data['temperature'][1]),
+            get_ts_figure(x=data['barometric_pressure'][0], y=data['barometric_pressure'][1]),
+            get_ts_figure(x=data['wind_speed'][0], y=data['wind_speed'][1]),
+            get_ts_figure_polar(r=data['wind_direction'][0], direction=data['wind_direction'][1]),
+            get_ts_figure(x=data['relative_humidity'][0], y=data['relative_humidity'][1]),
             )
 
 

@@ -1,8 +1,8 @@
 import os
 import json
-
-import pandas as pd
 import redis
+import pandas as pd
+import typing
 import logging
 
 from time import time
@@ -15,6 +15,9 @@ class RedisInfo:
     _password = None
     _host = None
     _port = None
+
+    # Add other Redis connection parameters there
+    _db = 0
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -153,6 +156,9 @@ class RedisClient:
         # Get the timeseries connector
         rc_ts = self.rc.ts()
         rc_ts_pipe = rc_ts.pipeline()
+
+        # TODO Create a timeseries for each parameter to avoid
+        #   TSDB: the key does not exist error
 
         #
         # At this point we should have timestamp, let's go over all the possible
@@ -304,3 +310,26 @@ class RedisClient:
         except ValueError:
             return [], []
         return x, y
+
+    def get_timeseries_data_multi(self,
+                                  station_id: str,
+                                  data_keywords: typing.List[str],
+                                  ts_from: int,
+                                  ts_to: int) -> typing.Dict[str, typing.Tuple[list, list]]:
+        """
+            Note that this is better to rewrite with Redis pipeline logic. The only thing is that
+            it may cause the error if some station and keyword do not exist. Therefore, update
+            the logic of time series data creation before updating this method.
+        :param station_id:
+        :param data_keywords:
+        :param ts_from:
+        :param ts_to:
+        :return:
+        """
+        data = dict()
+        for data_keyword in data_keywords:
+            data[data_keyword] = self.get_timeseries_data(station_id=station_id,
+                                                          data_keyword=data_keyword,
+                                                          ts_from=ts_from,
+                                                          ts_to=ts_to)
+        return data
