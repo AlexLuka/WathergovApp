@@ -94,14 +94,6 @@ def display_click_data(click_data):
         ts_to=ts_now
     )
 
-    # temperature_x, temperature_y = app.rc.get_timeseries_data(
-    #     station_id=station_id,
-    #     data_keyword="temperature",
-    #     ts_from=ts_now - 24 * 3600 * 1000 * 7,
-    #     ts_to=ts_now)
-    # print(f"Temp X: {temperature_x}")
-    # print(f"Temp Y: {temperature_y}")
-
     # return json.dumps(point, indent=2)
     return (point['customdata'][0],
             dbc.NavLink(
