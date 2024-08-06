@@ -1,4 +1,7 @@
+import pytz
 import plotly.graph_objects as go
+
+from datetime import datetime, timezone
 
 
 def get_default_figure():
@@ -21,12 +24,16 @@ def get_temperature_ts_figure(x: list, y: list, tz=None):
     :param tz:
     :return:
     """
+    if tz is None:
+        ts = [datetime.fromtimestamp(xi / 1000, tz=timezone.utc) for xi in x]
+    else:
+        ts = [datetime.fromtimestamp(xi / 1000, tz=pytz.timezone(tz)) for xi in x]
 
     fig = go.Figure()
 
     fig.add_trace(
         go.Scatter(
-            x=x,
+            x=ts,
             y=y,
             mode='lines+markers'
         )

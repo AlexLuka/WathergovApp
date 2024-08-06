@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
-from weathergov.app.viz import get_ts_figure, get_ts_figure_polar, get_default_figure
+from weathergov.app.viz import get_ts_figure, get_ts_figure_polar, get_default_figure, get_temperature_ts_figure
 
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ def display_click_data(click_data):
                 active=True
             ),
             f"{point['customdata'][2]} {elevation_units}",
-            get_ts_figure(x=data['temperature'][0], y=data['temperature'][1]),
+            get_temperature_ts_figure(x=data['temperature'][0], y=data['temperature'][1], tz=time_zone),
             get_ts_figure(x=data['barometric_pressure'][0], y=data['barometric_pressure'][1]),
             get_ts_figure(x=data['wind_speed'][0], y=data['wind_speed'][1]),
             get_ts_figure_polar(r=data['wind_direction'][0], direction=data['wind_direction'][1]),
