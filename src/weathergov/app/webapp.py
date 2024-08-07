@@ -168,6 +168,37 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
     return is_open + [0, 0, 0, 0, 0]
 
 
+@callback(
+    Output("dd-menu", "label"),
+    Output("dd-button-1", "n_clicks"),
+    Output("dd-button-2", "n_clicks"),
+    Output("dd-button-3", "n_clicks"),
+    Output("dd-button-4", "n_clicks"),
+    Input("dd-button-1", "n_clicks"),
+    Input("dd-button-2", "n_clicks"),
+    Input("dd-button-3", "n_clicks"),
+    Input("dd-button-4", "n_clicks"),
+    State("dd-button-1", "children"),
+    State("dd-button-2", "children"),
+    State("dd-button-3", "children"),
+    State("dd-button-4", "children"),
+)
+def update_map_color_scheme(n1, n2, n3, n4, b1_label, b2_label, b3_label, b4_label):
+
+    if n1 > 0:
+        label = b1_label
+    elif n2 > 0:
+        label = b2_label
+    elif n3 > 0:
+        label = b3_label
+    elif n4 > 0:
+        label = b4_label
+    else:
+        label = b1_label
+
+    return label, 0, 0, 0, 0
+
+
 def main():
     app.rc = RedisClient()
     app.layout = get_layout(app)

@@ -24,7 +24,9 @@ def get_map(app,
     # that indicate that we do not have data for that location
     ind_nan = df[coloring_parameter].isna()
 
-    # Fill nan values with mean
+    # Fill nan values with mean value, this is temporary step only to create an array of colors
+    # using sample_colorscale() function. Later, all the nans will be replaced with the default
+    # color
     temperature_mean = df[coloring_parameter].mean()
     df.loc[ind_nan, coloring_parameter] = temperature_mean
 
@@ -63,7 +65,7 @@ def get_map(app,
                           "<extra></extra>",
             marker={
                 "color": df['color'],
-                "colorbar": dict(thickness=20,
+                "colorbar": dict(thickness=10,
                                  tickvals=x_bar,
                                  ticktext=t_bar,
                                  outlinewidth=0,
