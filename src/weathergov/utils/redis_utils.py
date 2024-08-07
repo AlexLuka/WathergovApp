@@ -10,6 +10,9 @@ import logging
 from time import time
 from datetime import datetime
 
+from weathergov.constants import Metrics
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -167,7 +170,7 @@ class RedisClient:
         #
         # At this point we should have timestamp, let's go over all the possible
         # data metrics and add all of them as timeseries data to Redis
-        for keyword in ["temperature",
+        for keyword in [Metrics.Temperature,
                         "dew_point",
                         "wind_direction",
                         "wind_speed",

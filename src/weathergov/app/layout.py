@@ -25,7 +25,8 @@ def get_navbar():
             dbc.DropdownMenuItem("Humidity", id="dd-button-4", n_clicks=0),
         ],
         id="dd-menu",
-        align_end=True
+        align_end=True,
+        color="primary"
     )
 
     search_bar = dbc.Row(
