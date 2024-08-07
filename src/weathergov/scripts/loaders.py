@@ -6,7 +6,7 @@ import logging
 from time import time, sleep
 from datetime import datetime
 
-from weathergov.constants import Environment
+from weathergov.constants import Environment, TS_DATA_UPDATE_PERIOD_SECONDS
 from weathergov.utils.redis_utils import RedisClient
 from weathergov.utils.stations_utils import get_all_stations, get_station_data
 
@@ -74,8 +74,8 @@ def historical_data_loader(env: Environment, worker_id: int):
             # Run the consumption in infinite loop
             consume_historical_data(env=env, worker_id=worker_id)
 
-            # Sleep for 12 hours
-            sleep(3600 * 12)
+            # Sleep for 3 hours
+            sleep(3600 * 3)
     elif env is Environment.AWS:
         # In AWS environment we are going to exit automatically if we use
         # scheduled job. Therefore, no need to do any additional steps.
@@ -101,7 +101,7 @@ def consume_historical_data(env: Environment, worker_id: int):
         elif env is Environment.LOCAL:
             # If going to run in AWS then this check is redundant because we must do calculations
             # no matter what as scheduled job.
-            if time() - ts_last > 3600 * 24 * 6:
+            if time() - ts_last > TS_DATA_UPDATE_PERIOD_SECONDS:
                 # If time delta between last update time and the current update time is greater
                 # than 6 days (we assume that we get 7 days of data), and also that we are going
                 # to run this as a scheduled job

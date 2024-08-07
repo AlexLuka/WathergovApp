@@ -78,9 +78,16 @@ class RedisKeys:
     # station to that blacklist for a certain amount of time - 24 hours for example.
     WEATHER_STATIONS_NO_DATA_BLACKLIST = "weather_station:weather.gov:no_data_stations_blacklist"
 
+    # Set of all weather station IDs
+    WEATHER_STATIONS_IDS = "weather_station:weather.gov:station_ids"
+
     @staticmethod
     def get_rt_data_key(station_id, data_keyword):
         return f"weather_station:weather.gov:{station_id}:data:{data_keyword}"
+
+    @staticmethod
+    def get_station_info_hash_key(station_id):
+        return f"weather_station:weather.gov:{station_id}"
 
 
 class RedisClient:
@@ -159,8 +166,9 @@ class RedisClient:
         ts = data['timestamp']
 
         # Get the timeseries connector
-        rc_ts = self.rc.ts()
-        rc_ts_pipe = rc_ts.pipeline()
+        # rc_ts = self.rc.ts()
+        # rc_ts_pipe = rc_ts.pipeline()
+        pipe = self.rc.pipeline()
 
         # TODO Create a timeseries for each parameter to avoid
         #   TSDB: the key does not exist error
@@ -194,6 +202,9 @@ class RedisClient:
                                f"len(kw_data)={len(kw_data)} != {len(ts)} = len(ts)")
                 continue
 
+            # These are the most recent value and corresponding timestamp in milliseconds
+            val_max_ts, max_ts = 0, 0
+
             # Here we have the same length of ts and data and can insert it to Redis
             # First we need to convert the timestamp to unix time
             for tsi, value in zip(ts, kw_data):
@@ -202,18 +213,25 @@ class RedisClient:
 
                 key = RedisKeys.get_rt_data_key(station_id, keyword)
 
-                # rc_ts_pipe.create(key)
+                if tsi_unix > max_ts:
+                    max_ts = tsi_unix
+                    val_max_ts = value
 
                 # Add to timeseries
                 # rc_ts_pipe.add(f"weather_station:weather.gov:{station_id}:data:{keyword}",
                 #                tsi_unix, value,
                 #                duplicate_policy="FIRST")
-                rc_ts_pipe.add(key,
-                               tsi_unix,
-                               value,
-                               duplicate_policy="FIRST")
+                pipe.ts().add(key,
+                              tsi_unix,
+                              value,
+                              duplicate_policy="FIRST")
+
+            # Add the most recent value to station hash
+            pipe.hset(RedisKeys.get_station_info_hash_key(station_id=station_id), f"{keyword}_ts", str(max_ts))
+            pipe.hset(RedisKeys.get_station_info_hash_key(station_id=station_id), f"{keyword}_val", val_max_ts)
+
             # Execute transaction
-            rc_ts_pipe.execute()
+            pipe.execute()
             logger.info(f"{len(ts)} new data points added to {keyword} data for station {station_id}")
 
         self.logger.info(f"Data for station {station_id} have been added to Redis")
@@ -259,10 +277,10 @@ class RedisClient:
             station_id = station["station_id"]
 
             #
-            pipeline.hset(f"weather_station:weather.gov:{station_id}", mapping=station)
+            pipeline.hset(RedisKeys.get_station_info_hash_key(station_id=station_id), mapping=station)
 
             #
-            pipeline.sadd("weather_station:weather.gov:station_ids", station_id)
+            pipeline.sadd(RedisKeys.WEATHER_STATIONS_IDS, station_id)
 
             # Add a station to a sorted set with default value -1 - timestamp when it was updated.
             # First timestamp is going to be -1. When update in real-time we are going to have a
