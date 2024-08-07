@@ -323,9 +323,6 @@ class RedisClient:
                         'temperature': np.nan
                     }
                 )
-            # print(f"value={value}, type={type(value)}")
-        # print(ts_data)
-        # print(len(ts_data), len(station_ids))
 
         df_ts = pd.DataFrame(ts_data_updated)
         df = pd.DataFrame(data)
