@@ -14,7 +14,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
 
-def get_map(app) -> go.Figure:
+def get_map(app, colorscale='jet') -> go.Figure:
     #
     #
     # Get the data
@@ -30,24 +30,20 @@ def get_map(app) -> go.Figure:
     temperature_mean = df['temperature'].mean()
     df.loc[ind_nan, 'temperature'] = temperature_mean
 
-    x_min = df['temperature'].min()
-    x_max = df['temperature'].max()
+    colorbar_tick_step = 5
+    x_min = (int(df['temperature'].min()) // colorbar_tick_step) * colorbar_tick_step
+    x_max = (1 + int(df['temperature'].max()) // colorbar_tick_step) * colorbar_tick_step
+    n_ticks = 1 + int(x_max - x_min) // colorbar_tick_step
+
+    x_bar = np.linspace(0, 1, n_ticks)
+    t_bar = [f"{v:.2f}°" for v in (x_bar * (x_max - x_min) + x_min).tolist()]
 
     # -8.33 49.93 : that is going to be good
-    # print(x_min, x_max)
-
-    # print(df.head())
-    # print(df['temperature'].isna().sum())
     df['temperature'] = df['temperature'].apply(lambda x: (x - x_min) / (x_max - x_min))
+    df['color'] = sample_colorscale(colorscale, df['temperature'])
 
-    df['color'] = sample_colorscale('jet', df['temperature'])
-
+    # Replace all the nans with gray color
     df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
-    # c[ind_nan] = 'rgba(100, 100, 100, 0.5)'
-
-    # print(c)
-    # print(ind_nan)
-    # print(temperature_mean)
 
     #
     #
@@ -68,9 +64,19 @@ def get_map(app) -> go.Figure:
                           "URL: %{customdata[4]}" +
                           "<extra></extra>",
             marker={
-                "color": df['color']
-            }
-            # meta=df[['station_name', 'station_id', 'elevation']]
+                "color": df['color'],
+                "colorbar": dict(thickness=5,
+                                 tickvals=x_bar,
+                                 ticktext=t_bar,
+                                 outlinewidth=0,
+                                 orientation='h',
+                                 y=1,
+                                 bgcolor='white'),
+                "cmin": 0,
+                "cmax": 1,
+                "showscale": True,
+                "colorscale": colorscale
+            },
         )
     )
 
@@ -78,7 +84,7 @@ def get_map(app) -> go.Figure:
         autosize=True,
         mapbox_style="open-street-map",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 55},
+        mapbox_bounds={"west": -127, "east": -65, "south": 22, "north": 54},
         # clickmode='event+select'
     )
 
@@ -262,17 +268,15 @@ def get_layout(app):
             dbc.Row(
                 [
                     dbc.Col(
-                        # html.P("This is column 3"),
                         dcc.Graph(
                             figure=get_map(app),
                             style={"height": "100%"},
                             id=Components.GraphMap
                         ),
                         width=9,
-                        style={"background-color": "blue"},
+                        # style={"background-color": "blue"},
                     ),
                     dbc.Col(
-                        # html.P("This is column 4", id='click-data'),
                         get_weather_station_info_panel(),
                         width=3,
                         # style={"background-color": "cyan"},
