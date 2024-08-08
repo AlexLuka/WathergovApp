@@ -11,7 +11,11 @@ from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
 from weathergov.app.viz import (get_ts_figure,
-                                get_ts_figure_polar, get_default_figure, get_temperature_ts_figure, get_map)
+                                get_ts_figure_polar,
+                                get_default_figure,
+                                get_temperature_ts_figure,
+                                get_map)
+from weathergov.utils.logging_utils import init_logger
 
 
 logger = logging.getLogger(__name__)
@@ -184,6 +188,7 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
     State("dd-button-2", "children"),
     State("dd-button-3", "children"),
     State("dd-button-4", "children"),
+    config_prevent_initial_callbacks=True
 )
 def update_map_color_scheme(n1, n2, n3, n4, b1_label, b2_label, b3_label, b4_label):
 
@@ -205,6 +210,7 @@ def update_map_color_scheme(n1, n2, n3, n4, b1_label, b2_label, b3_label, b4_lab
 
 
 def main():
+    init_logger("weathergov")
     app.rc = RedisClient()
     app.layout = get_layout(app)
 
@@ -212,5 +218,4 @@ def main():
 if __name__ == "__main__":
     load_dotenv(dotenv_path="/Users/alexeylukyanov/Projects/WeatherData/.env")
     main()
-
     app.run_server(debug=True, use_reloader=True, port=8080)

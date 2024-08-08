@@ -207,7 +207,7 @@ def get_layout(app):
                 [
                     dbc.Col(
                         dcc.Graph(
-                            # figure=get_map(app),
+                            figure=get_map(app),
                             style={"height": "100%"},
                             id=Components.GraphMap
                         ),
