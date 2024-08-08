@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
-from weathergov.app.viz import get_ts_figure, get_ts_figure_polar, get_default_figure, get_temperature_ts_figure
+from weathergov.app.viz import (get_ts_figure,
+                                get_ts_figure_polar, get_default_figure, get_temperature_ts_figure, get_map)
 
 
 logger = logging.getLogger(__name__)
@@ -174,6 +175,7 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
     Output("dd-button-2", "n_clicks"),
     Output("dd-button-3", "n_clicks"),
     Output("dd-button-4", "n_clicks"),
+    Output(Components.GraphMap, "figure"),
     Input("dd-button-1", "n_clicks"),
     Input("dd-button-2", "n_clicks"),
     Input("dd-button-3", "n_clicks"),
@@ -186,17 +188,20 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
 def update_map_color_scheme(n1, n2, n3, n4, b1_label, b2_label, b3_label, b4_label):
 
     if n1 > 0:
-        label = b1_label
+        label = "temperature"
     elif n2 > 0:
-        label = b2_label
+        label = "barometric_pressure_val"
     elif n3 > 0:
-        label = b3_label
+        label = "wind_speed_val"
     elif n4 > 0:
-        label = b4_label
+        label = "relative_humidity_val"
     else:
-        label = b1_label
+        label = "temperature"
 
-    return label, 0, 0, 0, 0
+    fig = get_map(app, coloring_parameter=label)
+    print(f"New map have been created with label={label}")
+
+    return label, 0, 0, 0, 0, fig
 
 
 def main():
