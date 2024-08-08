@@ -16,7 +16,6 @@ def get_map(app,
     # Get the data from Redis
     # We store a connection object inside the app
     df = app.rc.get_observation_stations_info()
-    print(df.head())
     print(f"Generating a figure with coloring by {coloring_parameter}")
 
     # Create a colormap
@@ -24,8 +23,9 @@ def get_map(app,
     # Get all the indices of NaN values. If value is set to Nan, then we cannot
     # create a color, therefore we are going to make that object gray - default color
     # that indicate that we do not have data for that location
-    df.loc[df[coloring_parameter] < 99911990, coloring_parameter] = np.nan
+    df.loc[df[coloring_parameter] < -99911990, coloring_parameter] = np.nan
     ind_nan = df[coloring_parameter].isna()
+    print(df.head())
 
     # Fill nan values with mean value, this is temporary step only to create an array of colors
     # using sample_colorscale() function. Later, all the nans will be replaced with the default

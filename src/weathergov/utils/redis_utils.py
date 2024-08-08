@@ -348,9 +348,14 @@ class RedisClient:
 
         df_ts = pd.DataFrame(ts_data_updated)
         df = pd.DataFrame(data)
-
+        df = pd.merge(df, df_ts, on='station_id')
         # return pd.DataFrame(data)
-        return pd.merge(df, df_ts, on='station_id')
+
+        for col in df.columns:
+            if col.endswith("_val") or col.endswith("_ts"):
+                df[col] = df[col].astype(float)
+
+        return df
 
     def get_timeseries_data(self,
                             station_id: str,
