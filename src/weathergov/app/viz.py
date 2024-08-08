@@ -16,6 +16,7 @@ def get_map(app,
     # Get the data from Redis
     # We store a connection object inside the app
     df = app.rc.get_observation_stations_info()
+    print(df.head())
 
     # Create a colormap
 

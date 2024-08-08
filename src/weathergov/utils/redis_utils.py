@@ -173,23 +173,21 @@ class RedisClient:
         # TODO Create a timeseries for each parameter to avoid
         #   TSDB: the key does not exist error
 
-        # TODO Add the last value of temperature to the station info hash
-
         #
         # At this point we should have timestamp, let's go over all the possible
         # data metrics and add all of them as timeseries data to Redis
         for keyword in [Metrics.Temperature,
-                        "dew_point",
-                        "wind_direction",
-                        "wind_speed",
-                        "wind_gust",
-                        "barometric_pressure",
-                        "sea_level_pressure",
-                        "visibility",
-                        "precipitation_last_3h",
-                        "relative_humidity",
-                        "wind_chill",
-                        "heat_index"]:
+                        Metrics.DewPoint,
+                        Metrics.WindDirection,
+                        Metrics.WindSpeed,
+                        Metrics.WindGust,
+                        Metrics.WindChill,
+                        Metrics.BarometricPressure,
+                        Metrics.SeaLevelPressure,
+                        Metrics.Visibility,
+                        Metrics.Precipitation3h,
+                        Metrics.RelativeHumidity,
+                        Metrics.HeatIndex]:
             try:
                 kw_data = data[keyword]
             except KeyError:
@@ -313,6 +311,9 @@ class RedisClient:
         data = pipeline.execute()
 
         # Add the most recent data to the plot?
+        #
+        # TODO Remove this part as the most recent temperature value is going to be part
+        #   of the station info hash
         for station_id in station_ids:
             pipeline.ts().get(RedisKeys.get_rt_data_key(station_id, "temperature"))
         ts_data = pipeline.execute(raise_on_error=False)

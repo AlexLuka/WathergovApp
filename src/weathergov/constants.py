@@ -35,3 +35,6 @@ class Metrics(str, Enum):
     RelativeHumidity = "relative_humidity"
     WindChill = "wind_chill"
     HeatIndex = "heat_index"
+
+    def __str__(self):
+        return str(self.value)
