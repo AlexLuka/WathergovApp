@@ -1,22 +1,43 @@
 import pytz
 import numpy as np
+import logging
 import plotly.graph_objects as go
 
 from datetime import datetime, timezone
 from plotly.express.colors import sample_colorscale
 
+from weathergov.constants import Metrics
 from weathergov.app.constants import DataLabels
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_map(app,
             colorscale='jet',
-            coloring_parameter='temperature') -> go.Figure:
+            coloring_parameter=Metrics.Temperature,
+            show_inactive_stations=True):
+    if coloring_parameter is Metrics.Temperature:
+        logger.info(f"Coloring map by temperature")
+        return get_map_coloring_temperature(app,
+                                            colorscale=colorscale,
+                                            show_inactive_stations=show_inactive_stations)
+    else:
+        logger.warning(f"Coloring with parameter {coloring_parameter} have not been implemented yet")
+        return go.Figure()
+
+
+def get_map_coloring_temperature(app,
+                                 colorscale='jet',
+                                 show_inactive_stations=True) -> go.Figure:
     #
+    coloring_parameter = Metrics.Temperature
+
     #
     # Get the data from Redis
     # We store a connection object inside the app
     df = app.rc.get_observation_stations_info()
-    print(f"Generating a figure with coloring by {coloring_parameter}")
+    logger.info(f"Generating a figure with coloring by {coloring_parameter}")
 
     # Create a colormap
 
@@ -27,11 +48,14 @@ def get_map(app,
     ind_nan = df[coloring_parameter].isna()
     print(df.head())
 
-    # Fill nan values with mean value, this is temporary step only to create an array of colors
-    # using sample_colorscale() function. Later, all the nans will be replaced with the default
-    # color
-    temperature_mean = df[coloring_parameter].mean()
-    df.loc[ind_nan, coloring_parameter] = temperature_mean
+    if not show_inactive_stations:
+        df = df[~ind_nan]
+    else:
+        # Fill nan values with mean value, this is temporary step only to create an array of colors
+        # using sample_colorscale() function. Later, all the nans will be replaced with the default
+        # color
+        temperature_mean = df[coloring_parameter].mean()
+        df.loc[ind_nan, coloring_parameter] = temperature_mean
 
     colorbar_tick_step = 5
     x_min = (int(df[coloring_parameter].min()) // colorbar_tick_step) * colorbar_tick_step
@@ -46,7 +70,8 @@ def get_map(app,
     df['color'] = sample_colorscale(colorscale, df[coloring_parameter])
 
     # Replace all the nans with gray color
-    df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    if show_inactive_stations:
+        df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
 
     #
     #

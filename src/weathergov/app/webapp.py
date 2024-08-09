@@ -7,6 +7,7 @@ from dash import Dash, Input, Output, State, callback
 from dotenv import load_dotenv
 # from dash_bootstrap_components.themes import LUMEN
 
+from weathergov.constants import Metrics
 from weathergov.app.layout import get_layout
 from weathergov.app.components import Components
 from weathergov.utils.redis_utils import RedisClient
@@ -184,27 +185,27 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
     Input("dd-button-2", "n_clicks"),
     Input("dd-button-3", "n_clicks"),
     Input("dd-button-4", "n_clicks"),
-    State("dd-button-1", "children"),
-    State("dd-button-2", "children"),
-    State("dd-button-3", "children"),
-    State("dd-button-4", "children"),
+    # State("dd-button-1", "children"),
+    # State("dd-button-2", "children"),
+    # State("dd-button-3", "children"),
+    # State("dd-button-4", "children"),
     config_prevent_initial_callbacks=True
 )
-def update_map_color_scheme(n1, n2, n3, n4, b1_label, b2_label, b3_label, b4_label):
+def update_map_color_scheme(n1, n2, n3, n4):
 
     if n1 > 0:
-        label = "temperature"
+        label = Metrics.Temperature
     elif n2 > 0:
-        label = "barometric_pressure_val"
+        label = Metrics.BarometricPressure
     elif n3 > 0:
-        label = "wind_speed_val"
+        label = Metrics.WindSpeed
     elif n4 > 0:
-        label = "relative_humidity_val"
+        label = Metrics.RelativeHumidity
     else:
-        label = "temperature"
+        label = Metrics.Temperature
 
     fig = get_map(app, coloring_parameter=label)
-    print(f"New map have been created with label={label}")
+    logger.info(f"New map have been created with label={label}")
 
     return label, 0, 0, 0, 0, fig
 
