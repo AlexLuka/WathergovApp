@@ -13,25 +13,49 @@ from weathergov.app.constants import DataLabels
 logger = logging.getLogger(__name__)
 
 
+def get_colorscale(df, colorscale, coloring_parameter):
+    if coloring_parameter is Metrics.Temperature:
+        logger.info(f"Coloring map by temperature")
+        return get_colorscale_by_temperature(df, colorscale, coloring_parameter)
+    else:
+        logger.warning(f"Coloring with parameter {coloring_parameter} have not been implemented yet")
+        return "blue", [], []
+
+
+def get_colorscale_by_temperature(df, colorscale, coloring_parameter):
+    df.loc[df[coloring_parameter] < -99911990, coloring_parameter] = np.nan
+    ind_nan = df[coloring_parameter].isna()
+    print(df.head())
+
+    # Fill nan values with mean value, this is temporary step only to create an array of colors
+    # using sample_colorscale() function. Later, all the nans will be replaced with the default
+    # color
+    temperature_mean = df[coloring_parameter].mean()
+    df.loc[ind_nan, coloring_parameter] = temperature_mean
+
+    colorbar_tick_step = 5
+    x_min = (int(df[coloring_parameter].min()) // colorbar_tick_step) * colorbar_tick_step
+    x_max = (1 + int(df[coloring_parameter].max()) // colorbar_tick_step) * colorbar_tick_step
+    n_ticks = 1 + int(x_max - x_min) // colorbar_tick_step
+
+    colorscale_tick_values = np.linspace(0, 1, n_ticks)
+    colorscale_tick_labels = [f"{v:.2f}°" for v in (colorscale_tick_values * (x_max - x_min) + x_min).tolist()]
+
+    # -8.33 49.93 : that is going to be good
+    values = df[coloring_parameter].apply(lambda x: (x - x_min) / (x_max - x_min))
+    colors = sample_colorscale(colorscale, values)
+
+    # Replace all the nans with gray color
+    df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    return colors, colorscale_tick_values, colorscale_tick_labels
+
+
 def get_map(app,
             colorscale='jet',
             coloring_parameter=Metrics.Temperature,
-            show_inactive_stations=True):
-    if coloring_parameter is Metrics.Temperature:
-        logger.info(f"Coloring map by temperature")
-        return get_map_coloring_temperature(app,
-                                            colorscale=colorscale,
-                                            show_inactive_stations=show_inactive_stations)
-    else:
-        logger.warning(f"Coloring with parameter {coloring_parameter} have not been implemented yet")
-        return go.Figure()
-
-
-def get_map_coloring_temperature(app,
-                                 colorscale='jet',
-                                 show_inactive_stations=True) -> go.Figure:
+            show_inactive_stations=True) -> go.Figure:
     #
-    coloring_parameter = Metrics.Temperature
+    # coloring_parameter = Metrics.Temperature
 
     #
     # Get the data from Redis
@@ -44,34 +68,36 @@ def get_map_coloring_temperature(app,
     # Get all the indices of NaN values. If value is set to Nan, then we cannot
     # create a color, therefore we are going to make that object gray - default color
     # that indicate that we do not have data for that location
-    df.loc[df[coloring_parameter] < -99911990, coloring_parameter] = np.nan
-    ind_nan = df[coloring_parameter].isna()
-    print(df.head())
+    # df.loc[df[coloring_parameter] < -99911990, coloring_parameter] = np.nan
+    # ind_nan = df[coloring_parameter].isna()
+    # print(df.head())
+    #
+    # if not show_inactive_stations:
+    #     df = df[~ind_nan]
+    # else:
+    #     # Fill nan values with mean value, this is temporary step only to create an array of colors
+    #     # using sample_colorscale() function. Later, all the nans will be replaced with the default
+    #     # color
+    #     temperature_mean = df[coloring_parameter].mean()
+    #     df.loc[ind_nan, coloring_parameter] = temperature_mean
+    #
+    # colorbar_tick_step = 5
+    # x_min = (int(df[coloring_parameter].min()) // colorbar_tick_step) * colorbar_tick_step
+    # x_max = (1 + int(df[coloring_parameter].max()) // colorbar_tick_step) * colorbar_tick_step
+    # n_ticks = 1 + int(x_max - x_min) // colorbar_tick_step
+    #
+    # x_bar = np.linspace(0, 1, n_ticks)
+    # t_bar = [f"{v:.2f}°" for v in (x_bar * (x_max - x_min) + x_min).tolist()]
+    #
+    # # -8.33 49.93 : that is going to be good
+    # df[coloring_parameter] = df[coloring_parameter].apply(lambda x: (x - x_min) / (x_max - x_min))
+    # df['color'] = sample_colorscale(colorscale, df[coloring_parameter])
+    #
+    # # Replace all the nans with gray color
+    # if show_inactive_stations:
+    #     df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
 
-    if not show_inactive_stations:
-        df = df[~ind_nan]
-    else:
-        # Fill nan values with mean value, this is temporary step only to create an array of colors
-        # using sample_colorscale() function. Later, all the nans will be replaced with the default
-        # color
-        temperature_mean = df[coloring_parameter].mean()
-        df.loc[ind_nan, coloring_parameter] = temperature_mean
-
-    colorbar_tick_step = 5
-    x_min = (int(df[coloring_parameter].min()) // colorbar_tick_step) * colorbar_tick_step
-    x_max = (1 + int(df[coloring_parameter].max()) // colorbar_tick_step) * colorbar_tick_step
-    n_ticks = 1 + int(x_max - x_min) // colorbar_tick_step
-
-    x_bar = np.linspace(0, 1, n_ticks)
-    t_bar = [f"{v:.2f}°" for v in (x_bar * (x_max - x_min) + x_min).tolist()]
-
-    # -8.33 49.93 : that is going to be good
-    df[coloring_parameter] = df[coloring_parameter].apply(lambda x: (x - x_min) / (x_max - x_min))
-    df['color'] = sample_colorscale(colorscale, df[coloring_parameter])
-
-    # Replace all the nans with gray color
-    if show_inactive_stations:
-        df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    colors, colorscale_tick_values, colorscale_tick_labels = get_colorscale(df, colorscale, coloring_parameter)
 
     #
     #
@@ -92,10 +118,10 @@ def get_map_coloring_temperature(app,
                           "URL: %{customdata[4]}" +
                           "<extra></extra>",
             marker={
-                "color": df['color'],
+                "color": colors,
                 "colorbar": dict(thickness=10,
-                                 tickvals=x_bar,
-                                 ticktext=t_bar,
+                                 tickvals=colorscale_tick_values,
+                                 ticktext=colorscale_tick_labels,
                                  outlinewidth=0,
                                  orientation='h',
                                  y=1,
