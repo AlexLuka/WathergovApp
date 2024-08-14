@@ -175,20 +175,16 @@ def toggle_collapse(n1, n2, n3, n4, n5, is_open_1, is_open_2, is_open_3, is_open
 
 
 @callback(
-    Output("dd-menu", "label"),
-    Output("dd-button-1", "n_clicks"),
-    Output("dd-button-2", "n_clicks"),
-    Output("dd-button-3", "n_clicks"),
-    Output("dd-button-4", "n_clicks"),
+    Output(Components.DDMenuColorSchemeSelection, "label"),
+    Output(Components.DDMenuItemTemperature, "n_clicks"),
+    Output(Components.DDMenuItemBarPressure, "n_clicks"),
+    Output(Components.DDMenuItemWindSpeed, "n_clicks"),
+    Output(Components.DDMenuItemHumidity, "n_clicks"),
     Output(Components.GraphMap, "figure"),
-    Input("dd-button-1", "n_clicks"),
-    Input("dd-button-2", "n_clicks"),
-    Input("dd-button-3", "n_clicks"),
-    Input("dd-button-4", "n_clicks"),
-    # State("dd-button-1", "children"),
-    # State("dd-button-2", "children"),
-    # State("dd-button-3", "children"),
-    # State("dd-button-4", "children"),
+    Input(Components.DDMenuItemTemperature, "n_clicks"),
+    Input(Components.DDMenuItemBarPressure, "n_clicks"),
+    Input(Components.DDMenuItemWindSpeed, "n_clicks"),
+    Input(Components.DDMenuItemHumidity, "n_clicks"),
     config_prevent_initial_callbacks=True
 )
 def update_map_color_scheme(n1, n2, n3, n4):

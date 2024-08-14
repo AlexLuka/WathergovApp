@@ -10,6 +10,12 @@ class Components(str, Enum):
     WeatherStationInfoPanelElevationAboveGround = "ws-info-panel-elevation-above-round"
     WeatherStationInfoPanelStationURL = "ws-info-panel-station-url"
 
+    DDMenuColorSchemeSelection = "dd-menu"
+    DDMenuItemTemperature = "dd-button-1"
+    DDMenuItemBarPressure = "dd-button-2"
+    DDMenuItemWindSpeed = "dd-button-3"
+    DDMenuItemHumidity = "dd-button-4"
+
     @staticmethod
     def get_collapse_label_id(label: str):
         lab = "-".join(label.lower().split())

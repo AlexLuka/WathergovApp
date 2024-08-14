@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 from weathergov.app.viz import get_map
+from weathergov.constants import Metrics
 from weathergov.app.components import Components
 
 
@@ -17,14 +18,14 @@ def get_navbar():
     logo = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
     dropdown = dbc.DropdownMenu(
-        label="Menu",
+        label=Metrics.Temperature,
         children=[
-            dbc.DropdownMenuItem("Temperature", id="dd-button-1", n_clicks=0),
-            dbc.DropdownMenuItem("Pressure", id="dd-button-2", n_clicks=0),
-            dbc.DropdownMenuItem("Wind speed", id="dd-button-3", n_clicks=0),
-            dbc.DropdownMenuItem("Humidity", id="dd-button-4", n_clicks=0),
+            dbc.DropdownMenuItem("Temperature", id=Components.DDMenuItemTemperature, n_clicks=0),
+            dbc.DropdownMenuItem("Pressure", id=Components.DDMenuItemBarPressure, n_clicks=0),
+            dbc.DropdownMenuItem("Wind speed", id=Components.DDMenuItemWindSpeed, n_clicks=0),
+            dbc.DropdownMenuItem("Humidity", id=Components.DDMenuItemHumidity, n_clicks=0),
         ],
-        id="dd-menu",
+        id=Components.DDMenuColorSchemeSelection,
         align_end=True,
         color="primary"
     )
@@ -34,14 +35,7 @@ def get_navbar():
             dbc.Col(
                 dropdown,
                 width="auto"
-            ),
-            # dbc.Col(dbc.Input(type="search", placeholder="Search")),
-            # dbc.Col(
-            #     dbc.Button(
-            #         "Search", color="primary", className="ms-2", n_clicks=0
-            #     ),
-            #     width="auto",
-            # ),
+            )
         ],
         className="g-0 ms-auto flex-nowrap mt-3 mt-md-0",
         align="center",
