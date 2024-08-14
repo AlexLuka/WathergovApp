@@ -64,39 +64,6 @@ def get_map(app,
     logger.info(f"Generating a figure with coloring by {coloring_parameter}")
 
     # Create a colormap
-
-    # Get all the indices of NaN values. If value is set to Nan, then we cannot
-    # create a color, therefore we are going to make that object gray - default color
-    # that indicate that we do not have data for that location
-    # df.loc[df[coloring_parameter] < -99911990, coloring_parameter] = np.nan
-    # ind_nan = df[coloring_parameter].isna()
-    # print(df.head())
-    #
-    # if not show_inactive_stations:
-    #     df = df[~ind_nan]
-    # else:
-    #     # Fill nan values with mean value, this is temporary step only to create an array of colors
-    #     # using sample_colorscale() function. Later, all the nans will be replaced with the default
-    #     # color
-    #     temperature_mean = df[coloring_parameter].mean()
-    #     df.loc[ind_nan, coloring_parameter] = temperature_mean
-    #
-    # colorbar_tick_step = 5
-    # x_min = (int(df[coloring_parameter].min()) // colorbar_tick_step) * colorbar_tick_step
-    # x_max = (1 + int(df[coloring_parameter].max()) // colorbar_tick_step) * colorbar_tick_step
-    # n_ticks = 1 + int(x_max - x_min) // colorbar_tick_step
-    #
-    # x_bar = np.linspace(0, 1, n_ticks)
-    # t_bar = [f"{v:.2f}°" for v in (x_bar * (x_max - x_min) + x_min).tolist()]
-    #
-    # # -8.33 49.93 : that is going to be good
-    # df[coloring_parameter] = df[coloring_parameter].apply(lambda x: (x - x_min) / (x_max - x_min))
-    # df['color'] = sample_colorscale(colorscale, df[coloring_parameter])
-    #
-    # # Replace all the nans with gray color
-    # if show_inactive_stations:
-    #     df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
-
     colors, colorscale_tick_values, colorscale_tick_labels = get_colorscale(df, colorscale, coloring_parameter)
 
     #
