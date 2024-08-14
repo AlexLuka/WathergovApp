@@ -1,0 +1,2 @@
+# Jupyter notebooks, exclude from linguist
+*.ipynb text linguist-detectable=false
