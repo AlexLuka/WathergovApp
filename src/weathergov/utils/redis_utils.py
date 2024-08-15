@@ -81,6 +81,12 @@ class RedisKeys:
     # Set of all weather station IDs
     WEATHER_STATIONS_IDS = "weather_station:weather.gov:station_ids"
 
+    # Hash with timestamps when each station data was dumped in the following format:
+    #   name = "weather_station:weather.gov:last_data_dump"
+    #   key = "{station_id}:{metric}" like "AP196:temperature"
+    #   value = unix timestamp in milliseconds when data was dumped last time
+    WEATHER_STATIONS_DATA_DUMP_TS = "weather_station:weather.gov:last_data_dump"
+
     @staticmethod
     def get_rt_data_key(station_id, data_keyword):
         return f"weather_station:weather.gov:{station_id}:data:{data_keyword}"
@@ -406,3 +412,33 @@ class RedisClient:
                                                           ts_from=ts_from,
                                                           ts_to=ts_to)
         return data
+
+    def ping(self) -> bool:
+        return self.rc.ping()
+
+    def get_all_station_ids(self) -> list:
+        return list(self.rc.smembers("weather_station:weather.gov:station_ids"))
+
+    def get_weather_station_last_data_dump_ts(self, station_id: str, metric: Metrics) -> int:
+        ts = self.rc.hget(
+            name=RedisKeys.WEATHER_STATIONS_DATA_DUMP_TS,
+            key=f"{station_id}:{metric}"
+        )
+        if ts is None:
+            return 0
+
+        return int(ts)
+
+    def get_weather_station_last_data_dump_ts_all(self) -> dict:
+        tss = self.rc.hgetall(name=RedisKeys.WEATHER_STATIONS_DATA_DUMP_TS)
+
+        for key, value in tss.items():
+            tss[key] = int(value)
+        return tss
+
+    def set_weather_station_last_data_dump_ts(self, station_id: str, metric: Metrics, ts: int):
+        self.rc.hset(
+            name=RedisKeys.WEATHER_STATIONS_DATA_DUMP_TS,
+            key=f"{station_id}:{metric}",
+            value=str(ts)
+        )

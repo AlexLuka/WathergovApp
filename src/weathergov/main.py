@@ -7,6 +7,7 @@ from weathergov.scripts.loaders import (observation_station_loader,
                                         historical_data_loader,
                                         rt_data_loader)
 from weathergov.utils.logging_utils import init_logger
+from weathergov.scripts.data_dumper import start_data_dumper
 
 
 """
@@ -28,6 +29,9 @@ def main(script_name: str, worker_id: int, env: Environment):
     elif script_name == "RTDataLoader":
         logger.info(f"RTDataLoader is running")
         rt_data_loader()
+    elif script_name == "DataDumper":
+        logger.info(f"Starting data dumper service")
+        start_data_dumper()
     else:
         logger.info(f"Unknown script {script_name}. Exiting...")
         exit(1)
