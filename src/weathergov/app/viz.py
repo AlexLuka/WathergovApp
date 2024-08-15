@@ -45,8 +45,11 @@ def get_colorscale_by_temperature(df, colorscale, coloring_parameter):
     values = df[coloring_parameter].apply(lambda x: (x - x_min) / (x_max - x_min))
     colors = sample_colorscale(colorscale, values)
 
+    colors = np.asarray(colors)
+
     # Replace all the nans with gray color
-    df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    # df.loc[ind_nan, 'color'] = 'rgba(100, 100, 100, 0.5)'
+    colors[ind_nan] = 'rgb(100, 100, 100)'
     return colors, colorscale_tick_values, colorscale_tick_labels
 
 
