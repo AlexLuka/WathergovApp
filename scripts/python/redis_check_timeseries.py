@@ -27,11 +27,14 @@ station_ids = rc.get_all_station_ids()
 print(f"There are {len(station_ids)} station IDs")
 
 station_updates = rc.get_weather_station_last_data_dump_ts_all()
-print(f"Data dumps: {station_updates}")
+print(f"Data dumps: {len(station_updates)}")
+
+print(f"Queue length: {rc.rc.llen('weather_station_process_queue')}")
 
 # Select one station randomly
 while True:
-    station_id = choice(station_ids)
+    # station_id = choice(station_ids)
+    station_id = "E1991"
 
     x, y = rc.get_timeseries_data(
         station_id=station_id,

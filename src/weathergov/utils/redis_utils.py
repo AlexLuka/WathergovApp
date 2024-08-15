@@ -240,6 +240,20 @@ class RedisClient:
 
         self.logger.info(f"Data for station {station_id} have been added to Redis")
 
+    def remove_timeseries_data(self, station_id: str, metric: Metrics, ts_from, ts_to):
+        try:
+            self.rc.ts().delete(
+                RedisKeys.get_rt_data_key(station_id, metric),
+                ts_from,
+                ts_to
+            )
+        except redis.exceptions.ResponseError:
+            self.logger.error(f"Failed to remove data from timeseries for station={station_id} "
+                              f"and metric={metric} for time_from='{ts_from}' and time_to={ts_to}")
+            return
+        self.logger.info(f"Successfully removed data from timeseries for station={station_id} "
+                         f"and metric={metric} for time_from='{ts_from}' and time_to={ts_to}")
+
     def get_rt_update_station(self):
         """
         :return: A station that needs to be updated basd on the value
@@ -433,7 +447,7 @@ class RedisClient:
         tss = self.rc.hgetall(name=RedisKeys.WEATHER_STATIONS_DATA_DUMP_TS)
 
         for key, value in tss.items():
-            tss[key] = int(value)
+            tss[key] = int(float(value) / 1000)
         return tss
 
     def set_weather_station_last_data_dump_ts(self, station_id: str, metric: Metrics, ts: int):
